@@ -10,8 +10,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#030b0d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='7'%20fill='%23031013'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='10.5'%20fill='none'%20stroke='%236ff5d8'%20stroke-width='1.7'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='4.2'%20fill='%23b18cff'/%3E%3C/svg%3E">
 <meta name="description" content="高中生物必修1第3章：可自由漫游的3D细胞内部模型，点击细胞器与胞内物质查看知识点。">
 <title>细胞内部漫游 · 3D 细胞探索 | 必修1 第3章</title>
+<link rel="canonical" href="https://tim261004.github.io/cell/desktop.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="细胞内部漫游 · Inside the Cell">
+<meta property="og:title" content="细胞内部漫游 · 桌面版">
+<meta property="og:description" content="高中生物必修1第3章：可自由漫游的3D细胞模型。鼠标环绕、滚轮靠近、WASD 进入细胞内部，点击任意结构查看知识点。">
+<meta property="og:url" content="https://tim261004.github.io/cell/desktop.html">
+<meta property="og:image" content="https://tim261004.github.io/cell/preview-desktop.jpg">
+<meta property="og:image:width" content="1000">
+<meta property="og:image:height" content="625">
+<meta property="og:image:alt" content="桌面版：3D 细胞内部模型界面预览">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="细胞内部漫游 · 桌面版">
+<meta name="twitter:description" content="高中生物必修1第3章：可自由漫游的3D细胞模型，点击结构查看知识点。">
+<meta name="twitter:image" content="https://tim261004.github.io/cell/preview-desktop.jpg">
 <style>/* =========================================================
    INSIDE THE CELL — 3D cell explorer
    ========================================================= */
@@ -568,9 +584,223 @@ body.walking .side-mark{opacity:0}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
 </style>
+<style>/* =========================================================
+   分泌蛋白路径演示（同位素标记追踪 · 分步图层切换）
+   ========================================================= */
+#btnPath{color:var(--mint);border-color:var(--line)}
+#btnPath.on{color:#031a17;background:linear-gradient(135deg,#c4ffef,#5fe9cc);border-color:transparent}
+#pathBar{
+  position:fixed;left:50%;bottom:20px;z-index:26;
+  width:min(860px,calc(100% - 40px));
+  transform:translate(-50%,22px);opacity:0;pointer-events:none;
+  transition:opacity .3s var(--ease),transform .42s var(--ease);
+}
+body.pathway #pathBar{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+body.pathway #dock,body.pathway #fabWalk,body.pathway #walkhint,body.pathway #crosshair{display:none!important}
+#panel.open~#pathBar{width:min(700px,calc(100% - 490px));left:calc((100% - 430px)/2)}
+.pb-shell{
+  display:flex;align-items:stretch;gap:12px;padding:14px 15px;
+  border:1px solid var(--line-strong);border-radius:16px;
+  background:linear-gradient(180deg,rgba(6,24,26,.94),rgba(3,12,14,.97));
+  box-shadow:0 26px 70px rgba(0,0,0,.55);
+}
+.pb-btn{
+  flex:0 0 auto;width:40px;border:1px solid var(--line);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  background:rgba(255,255,255,.02);transition:.22s;
+}
+.pb-btn:hover:not(:disabled){color:var(--ink);border-color:var(--line-strong);background:rgba(111,245,216,.08)}
+.pb-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7}
+.pb-btn:disabled{opacity:.28;cursor:default}
+.pb-body{flex:1 1 auto;min-width:0}
+.pb-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.pb-step{font-size:8.5px;letter-spacing:.2em;color:var(--mint);text-transform:uppercase;white-space:nowrap}
+.pb-dots{display:flex;gap:5px;margin-left:auto}
+.pb-dots i{width:6px;height:6px;border-radius:50%;background:rgba(137,255,232,.18);transition:.25s}
+.pb-dots i.on{background:var(--mint);box-shadow:0 0 9px var(--mint)}
+.pb-title{font-size:15.5px;font-weight:650;letter-spacing:-.01em;color:var(--ink);margin-bottom:6px}
+.pb-text{margin:0;font-size:11.5px;line-height:1.82;color:#a6c7c1}
+.pb-extra{
+  margin-top:7px;padding:6px 9px;border-left:2px solid rgba(255,192,106,.55);
+  border-radius:0 6px 6px 0;background:rgba(255,192,106,.05);
+  font-size:10px;line-height:1.7;color:#dcc49a;
+}
+.pb-extra:empty{display:none}
+.pb-exit{
+  flex:0 0 auto;align-self:flex-start;padding:7px 12px;border-radius:8px;
+  border:1px solid rgba(255,192,106,.28);color:#ffd8a6;font-size:10px;letter-spacing:.06em;
+  background:rgba(255,192,106,.05);transition:.22s;white-space:nowrap;
+}
+.pb-exit:hover{background:rgba(255,192,106,.16);border-color:rgba(255,192,106,.5)}
+.tag.ghost:not(.hide){opacity:.22}
+@media (max-width:900px){
+  #panel.open~#pathBar{width:calc(100% - 28px);left:50%}
+}
+@media (max-width:620px){
+  #pathBar{bottom:calc(14px + env(safe-area-inset-bottom));width:calc(100% - 20px)}
+  .pb-shell{gap:8px;padding:11px 12px;border-radius:14px}
+  .pb-btn{width:34px}
+  .pb-title{font-size:13.5px}
+  .pb-text{font-size:11px;line-height:1.7;max-height:5.6em;overflow-y:auto}
+  .pb-extra{font-size:9.5px;margin-top:6px}
+  .pb-exit{padding:6px 9px;font-size:9px}
+}
+</style>
+<style>/* ==== 跨膜运输实验室 ==== */
+#btnLab{color:#ffd166;border-color:rgba(255,209,102,.22)}
+#btnLab.on{color:#1a1203;background:linear-gradient(135deg,#ffe9b0,#ffd166);border-color:transparent}
+#labModal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,6,7,.72);backdrop-filter:blur(6px)}
+#labModal.open{display:flex}
+.lab-card{width:min(1080px,100%);max-height:calc(100vh - 40px);overflow:auto;border:1px solid var(--line-strong);border-radius:18px;background:linear-gradient(180deg,rgba(6,24,26,.97),rgba(3,12,14,.99));box-shadow:0 30px 90px rgba(0,0,0,.6);padding:18px 20px 20px}
+.lab-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.lab-head small{font-size:9px;letter-spacing:.2em;color:var(--mint)}
+.lab-head h2{margin:4px 0 0;font-size:22px;font-weight:650}
+.lab-close{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;color:var(--muted);display:flex;align-items:center;justify-content:center;background:transparent}
+.lab-close svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6}
+#labTabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.lab-tab{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:7px 11px;border:1px solid var(--line);border-radius:9px;color:var(--muted);font-size:12px;background:rgba(255,255,255,.015);cursor:pointer}
+.lab-tab small{font-size:8.5px;letter-spacing:.1em;opacity:.75}
+.lab-tab.on{color:var(--ink);border-color:var(--c);box-shadow:inset 0 0 0 1px var(--c);background:rgba(255,255,255,.04)}
+.lab-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+#labCanvas{width:100%;height:320px;display:block;border:1px solid var(--line);border-radius:12px;background:#020a0b}
+#labInfo{font-size:12px;line-height:1.85;color:#a6c7c1}
+#labInfo p{margin:8px 0}
+.lab-facts{display:grid;gap:5px}
+.lab-facts div,.lab-ex{color:#d9f3ee}
+.lab-facts b,.lab-ex b{display:inline-block;min-width:64px;margin-right:8px;color:var(--mint);font-weight:500}
+.lab-exam{margin-top:8px;padding:7px 10px;border-left:2px solid rgba(255,192,106,.55);background:rgba(255,192,106,.05);color:#dcc49a;font-size:11px}
+.lab-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:11px;color:#bcd9d3}
+.lab-table th,.lab-table td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+.lab-table th{color:var(--mint);font-weight:500;background:rgba(111,245,216,.04)}
+@media (max-width:820px){
+  #labModal{padding:0;align-items:stretch}
+  .lab-card{max-height:100vh;border-radius:0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+  .lab-grid{grid-template-columns:1fr}
+  #labCanvas{height:230px}
+  .lab-tab{font-size:11px;padding:6px 9px}
+}
+</style>
+<style>/* ==== PATHWAY LIVE CSS ==== */
+.pw-play svg{fill:currentColor;stroke:currentColor;stroke-width:1.2}
+.pw-live{margin-top:9px;padding-top:8px;border-top:1px solid var(--line)}
+.pw-prog{height:2px;border-radius:2px;background:rgba(137,255,232,.1);overflow:hidden;margin-bottom:8px}
+.pw-prog i{display:block;height:100%;width:0;background:var(--mint)}
+.pw-head{display:flex;justify-content:space-between;gap:8px;font-size:9.5px;color:var(--muted);margin-bottom:6px}
+.pw-head b{color:var(--mint);font-weight:600;letter-spacing:.04em}
+.pw-head span{color:#ffd8a6}
+.pw-bars{display:grid;grid-template-columns:1fr 1fr;gap:5px 14px}
+.pw-bar{display:grid;grid-template-columns:86px 1fr 32px;align-items:center;gap:6px;font-size:9.5px;color:#a6c7c1}
+.pw-track{height:6px;border-radius:4px;background:rgba(255,255,255,.05);overflow:hidden}
+.pw-track i{display:block;height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,#2fd4bb,#6ff5d8)}
+.pw-bar em{font-style:normal;text-align:right;color:var(--ink);font-family:Consolas,monospace}
+.pw-note{margin-top:5px;font-size:8.5px;color:var(--dim)}
+#pwCallout,#pwEnergy{position:fixed;left:0;top:0;z-index:24;pointer-events:none;opacity:0;transition:opacity .25s;
+  padding:5px 9px;border-radius:7px;font-size:11px;white-space:nowrap;backdrop-filter:blur(6px)}
+#pwCallout{background:rgba(4,24,23,.88);border:1px solid rgba(111,245,216,.55);color:#dffff7;box-shadow:0 0 18px rgba(111,245,216,.18)}
+#pwCallout::before{content:"";position:absolute;left:-12px;top:50%;width:12px;height:1px;background:rgba(111,245,216,.6)}
+#pwEnergy{background:rgba(40,24,4,.85);border:1px solid rgba(255,207,92,.5);color:#ffe2a6;font-size:10px}
+body.pw-live-on #pwCallout.on,body.pw-live-on #pwEnergy.on{opacity:1}
+@media (max-width:620px){
+  .pw-bars{grid-template-columns:1fr;gap:3px}
+  .pw-bar{grid-template-columns:78px 1fr 30px;font-size:9px}
+  .pw-note{display:none}
+  #pwCallout{font-size:10px;padding:4px 7px}
+}
+</style>
+<style>/* ==== STRUCTURE TUNING CSS ==== */
+/* 细胞器内部细节标注 */
+.cell-detail{
+  position:fixed;left:0;top:0;z-index:23;pointer-events:none;opacity:0;
+  transform-origin:left center;
+  padding:2px 6px;border-radius:5px;font-size:10px;letter-spacing:.02em;
+  background:rgba(6,20,22,.82);border:1px solid rgba(255,209,140,.5);color:#ffe6bd;
+  white-space:nowrap;transition:opacity .2s;
+}
+.cell-detail.on{opacity:1}
+.cell-detail::before{content:"";position:absolute;left:50%;bottom:-5px;width:1px;height:5px;background:rgba(255,209,140,.55)}
+/* 演示面板：收起按钮 */
+.pb-collapse{
+  flex:0 0 auto;margin-left:6px;padding:2px 7px;border-radius:5px;
+  border:1px solid var(--line);background:rgba(255,255,255,.02);
+  color:var(--muted);font-size:9.5px;cursor:pointer;
+}
+.pb-collapse:hover{color:var(--ink);border-color:var(--line-strong)}
+#pathBar.pw-compact .pb-text,
+#pathBar.pw-compact .pb-extra,
+#pathBar.pw-compact .pw-live{display:none}
+/* 沉浸模式（不支持全屏时的退路） */
+body.immersive .topbar,
+body.immersive #dock,
+body.immersive .dock-shell{display:none!important}
+html,body{height:100%}
+@supports (height:100dvh){html,body{height:100dvh}}
+/* 手机端：演示面板压缩，尽量少遮挡画面 */
+@media (max-width:620px){
+  #pathBar{bottom:calc(10px + env(safe-area-inset-bottom));max-height:44vh;overflow:hidden}
+  .pb-shell{padding:9px 10px;gap:7px;border-radius:13px}
+  .pb-title{font-size:13px;margin-bottom:4px;line-height:1.35}
+  .pb-text{font-size:10.5px;line-height:1.62;max-height:3.4em;overflow-y:auto}
+  .pb-extra{font-size:9.5px;line-height:1.55;max-height:2.3em;overflow-y:auto;padding:4px 7px;margin-top:5px}
+  .pw-live{margin-top:6px;padding-top:6px}
+  .pw-prog{margin-bottom:5px}
+  .pw-head{font-size:9px;margin-bottom:4px}
+  .pw-bars{grid-template-columns:repeat(4,1fr);gap:4px}
+  .pw-bar{display:flex;flex-direction:column;align-items:stretch;gap:2px;font-size:8px;color:#9dbdb7}
+  .pw-bar span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center}
+  .pw-track{height:4px}
+  .pw-bar em{text-align:center;font-size:8.5px}
+  .pw-note{display:none}
+  .pb-collapse{padding:2px 6px;font-size:9px}
+  .cell-detail{font-size:9px;padding:1px 5px}
+}
+</style>
+<style>/* ==== INSPECT BAR ==== */
+#inspectBar{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));
+  transform:translate(-50%,16px);z-index:25;
+  display:none;align-items:center;gap:10px;
+  padding:8px 10px 8px 14px;border-radius:999px;
+  border:1px solid var(--line-strong);
+  background:linear-gradient(180deg,rgba(6,24,26,.95),rgba(3,12,14,.97));
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  max-width:calc(100% - 28px);
+  transition:opacity .25s,transform .3s var(--ease);
+}
+#inspectBar.on{display:flex;transform:translate(-50%,0)}
+.ib-name{
+  flex:0 0 auto;padding:5px 12px;border-radius:999px;
+  border:1px solid rgba(111,245,216,.5);background:rgba(111,245,216,.1);
+  color:#dffff7;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+}
+.ib-name:hover{background:rgba(111,245,216,.2);border-color:rgba(111,245,216,.8)}
+.ib-name::after{content:" ›";opacity:.7;font-weight:400}
+.ib-hint{font-size:10px;color:var(--dim);white-space:nowrap}
+.ib-close{
+  flex:0 0 auto;width:26px;height:26px;border-radius:50%;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  font-size:15px;line-height:1;cursor:pointer;
+}
+.ib-close:hover{color:var(--ink);border-color:var(--line-strong)}
+body.pw-live-on #inspectBar{display:none!important}
+@media (max-width:620px){
+  #inspectBar{bottom:calc(12px + env(safe-area-inset-bottom));gap:7px;padding:7px 8px 7px 11px}
+  .ib-name{font-size:12px;padding:4px 9px}
+  .ib-hint{font-size:9px;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+}
+</style>
 </head>
 <body>
 <canvas id="scene" aria-label="可交互的3D细胞内部模型"></canvas>
+
+<noscript>
+  <div style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#03100f;color:#dff;padding:32px;font-family:'Segoe UI','Microsoft YaHei',sans-serif;text-align:center">
+    <div style="max-width:520px">
+      <div style="font-size:11px;letter-spacing:.22em;color:#6ff5d8;margin-bottom:14px">JAVASCRIPT REQUIRED</div>
+      <h1 style="font-size:26px;margin:0 0 12px;font-weight:650">需要启用 JavaScript</h1>
+      <p style="font-size:13px;line-height:1.9;color:#9fc4bd">这个 3D 细胞模型需要 JavaScript 与 WebGL 才能运行。请在浏览器设置中开启 JavaScript 后刷新页面；如果使用无痕模式，请确认未禁用脚本。</p>
+    </div>
+  </div>
+</noscript>
 
 <div class="fx" id="vignette"></div>
 <div class="fx" id="grain"></div>
@@ -600,6 +830,14 @@ body.walking .side-mark{opacity:0}
     <button class="tool" id="btnCheat" title="打开本章速记">
       <svg viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H20v18H5.5A1.5 1.5 0 0 1 4 19.5Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
       <span class="tlabel">速记</span>
+    </button>
+    <button class="tool" id="btnPath" title="分泌蛋白路径演示（同位素标记追踪）">
+      <svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.1"/><circle cx="18" cy="18" r="2.1"/><path d="M8.1 6h5.4a3.4 3.4 0 0 1 0 6.8H9.6a3.4 3.4 0 0 0 0 6.8"/></svg>
+      <span class="tlabel">路径演示</span>
+    </button>
+    <button class="tool" id="btnLab" title="跨膜运输实验室（第4章）">
+      <svg viewBox="0 0 24 24"><path d="M3 9h18M3 15h18"/><path d="M12 3v5M12 16v5M9 6l3 2 3-2M9 18l3-2 3 2"/></svg>
+      <span class="tlabel">物质运输</span>
     </button>
     <button class="tool icon-only" id="btnHelp" title="操作帮助">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 3.7 2.2c-.8.5-1.3 1-1.3 2"/><circle cx="12" cy="17.2" r=".7" fill="currentColor" stroke="none"/></svg>
@@ -653,6 +891,27 @@ body.walking .side-mark{opacity:0}
   <div class="panel-fade" id="panelFade">向下滚动 · 更多考点</div>
 </aside>
 
+<div id="pathBar" aria-hidden="true" role="region" aria-label="分泌蛋白路径演示">
+  <div class="pb-shell">
+    <button class="pb-btn" id="pbPrev" aria-label="上一步">
+      <svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg>
+    </button>
+    <div class="pb-body">
+      <div class="pb-top">
+        <span class="pb-step" id="pbStep">步骤 1 / 8</span>
+        <span class="pb-dots" id="pbDots" aria-hidden="true"></span>
+      </div>
+      <div class="pb-title" id="pbTitle">—</div>
+      <p class="pb-text" id="pbText">—</p>
+      <div class="pb-extra" id="pbExtra"></div>
+    </div>
+    <button class="pb-btn" id="pbNext" aria-label="下一步">
+      <svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+    </button>
+    <button class="pb-exit" id="pbExit">退出演示</button>
+  </div>
+</div>
+
 <div id="intro">
   <div class="intro-card">
     <div class="kicker">BIOLOGY · UNIT 3 <span>/ INTERACTIVE ATLAS</span></div>
@@ -696,6 +955,35 @@ body.walking .side-mark{opacity:0}
       </button>
     </div>
     <div id="modalBody"></div>
+  </div>
+</div>
+
+<div id="labModal" aria-hidden="true">
+  <div class="lab-card" role="dialog" aria-modal="true" aria-labelledby="labTitle">
+    <div class="lab-head">
+      <div><small>CHAPTER 4 / MEMBRANE TRANSPORT</small><h2 id="labTitle">细胞的物质输入和输出</h2></div>
+      <button class="lab-close" id="labClose" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+    </div>
+    <div id="labTabs" role="tablist" aria-label="运输方式"></div>
+    <div class="lab-grid">
+      <canvas id="labCanvas" aria-label="跨膜运输示意动画"></canvas>
+      <div id="labInfo"></div>
+    </div>
+    <table class="lab-table">
+      <tr><th>方式</th><th>浓度方向</th><th>转运蛋白</th><th>耗能</th><th>典型实例</th></tr>
+      <tr><td>自由扩散</td><td>高 → 低</td><td>否</td><td>否</td><td>O₂、CO₂、甘油、乙醇</td></tr>
+      <tr><td>协助扩散</td><td>高 → 低</td><td>是（通道 / 载体）</td><td>否</td><td>水通道运水；葡萄糖进红细胞</td></tr>
+      <tr><td>主动运输</td><td>低 → 高</td><td>是（载体）</td><td>是</td><td>小肠吸收葡萄糖、氨基酸；根吸收无机盐</td></tr>
+      <tr><td>胞吞 / 胞吐</td><td>—</td><td>不需转运蛋白，需膜蛋白识别</td><td>是</td><td>吞噬病菌；分泌蛋白、神经递质</td></tr>
+    </table>
+    <table class="lab-table">
+      <tr><th colspan="2">渗透作用与质壁分离（同章要点）</th></tr>
+      <tr><td>渗透作用条件</td><td>① 有半透膜 ② 膜两侧溶液有浓度差；水分子从低浓度溶液向高浓度溶液净移动</td></tr>
+      <tr><td>原生质层</td><td>细胞膜 + 液泡膜 + 两层膜之间的细胞质，相当于一层半透膜；细胞壁全透性</td></tr>
+      <tr><td>质壁分离</td><td>外界溶液浓度 &gt; 细胞液浓度，细胞失水，原生质层伸缩性大于细胞壁 → 原生质层与细胞壁分离；液泡变小、颜色加深</td></tr>
+      <tr><td>复原</td><td>放入清水（低浓度）中吸水复原；KNO₃、尿素、甘油溶液中可自动复原（溶质能被吸收）</td></tr>
+      <tr><td>易错</td><td>选材要有大液泡、活细胞（紫色洋葱鳞片叶外表皮）；高浓度溶液可使细胞失水过多死亡，无法复原</td></tr>
+    </table>
   </div>
 </div>
 
@@ -835,7 +1123,7 @@ window.CELL_DATA = {
       "参与细胞凋亡等生命活动的调控"
     ],
     exam: "有氧呼吸第二、三阶段分别在线粒体基质和线粒体内膜上进行；线粒体不能直接利用葡萄糖，只能利用丙酮酸。代谢旺盛的细胞（如心肌细胞）线粒体数量较多。",
-    relations: ["cytosol", "atp", "enzyme", "nucleicAcid"]
+    relations: ["cytosol", "atp", "enzyme", "nucleicAcid", "peroxisome"]
   },
 
   chloroplast: {
@@ -947,7 +1235,7 @@ window.CELL_DATA = {
       "参与细胞内的物质回收和再利用"
     ],
     exam: "溶酶体内的水解酶由核糖体合成，经内质网和高尔基体加工形成。溶酶体膜破裂会释放水解酶，损伤细胞；这体现了生物膜系统分隔作用的重要性。",
-    relations: ["golgi", "vesicle", "enzyme", "membrane"]
+    relations: ["golgi", "vesicle", "enzyme", "membrane", "peroxisome"]
   },
 
   centrosome: {
@@ -4028,7 +4316,7 @@ window.CELL_DATA = {
     const p = new V3();
     e.group.getWorldPosition(p);
     orbit.targetGoal.copy(p);
-    orbit.radiusGoal = clamp(e.radius * 4.4 + 4.6, 9.5, 36);
+    orbit.radiusGoal = clamp(e.radius < 5 ? e.radius * 1.6 + 0.6 : e.radius * 2.6 + 2.0, 2.4, 44);
     orbit.auto = false;
     orbit.idle = 0;
   }
@@ -4167,7 +4455,7 @@ window.CELL_DATA = {
         const arr = Array.from(pointers.values());
         const d = Math.hypot(arr[0].x - arr[1].x, arr[0].y - arr[1].y);
         if (pinchDist > 0) {
-          orbit.radiusGoal = clamp(orbit.radiusGoal * (pinchDist / Math.max(1, d)), 7, 58);
+          orbit.radiusGoal = clamp(orbit.radiusGoal * (pinchDist / Math.max(1, d)), 2.4, 58);
         }
         pinchDist = d;
         return;
@@ -4230,7 +4518,7 @@ window.CELL_DATA = {
     (e) => {
       if (state.introOpen || state.modalOpen || state.view !== "orbit") return;
       e.preventDefault();
-      orbit.radiusGoal = clamp(orbit.radiusGoal * Math.exp(e.deltaY * 0.00105), 6.5, 58);
+      orbit.radiusGoal = clamp(orbit.radiusGoal * Math.exp(e.deltaY * 0.00105), 2.4, 58);
       orbit.auto = false;
       orbit.idle = 0;
     },
@@ -4398,6 +4686,2148 @@ window.CELL_DATA = {
   });
 
 
+  /* =========================================================
+     分泌蛋白路径演示（同位素标记追踪 · 分步图层切换）
+     教材主线：分泌蛋白的合成与运输，需要核糖体、内质网、高尔基体、
+     线粒体等多种细胞器的分工合作。演示按步骤切换显示的图层：
+     每一步只保留该步涉及的结构，其余结构淡出为「幽灵」状态，
+     并用一个 ³H 标记点沿真实路径移动，复现同位素标记法的追踪过程。
+     ========================================================= */
+  const PATHWAY = [
+    {
+      ids: ["membrane", "cytosol", "ribosome"],
+      focus: "cell",
+      zoom: 40,
+      target: "cell",
+      path: ["outside", "cytosol"],
+      title: "① 用 ³H 标记的亮氨酸培养细胞",
+      text:
+        "把细胞放在含 ³H 标记的亮氨酸培养液里。氨基酸经细胞膜进入细胞质基质，这一步主要是主动运输，需要载体蛋白并消耗能量。同位素标记法（放射性同位素标记法）利用放射性同位素的示踪作用追踪物质的运行和变化规律：放射性同位素与相应元素的化学性质相同，所以细胞会把它当作正常原料使用。",
+      extra: "易错：标记的是亮氨酸（氨基酸），不是葡萄糖，也不是核苷酸。"
+    },
+    {
+      ids: ["ribosome", "er"],
+      focus: "ribosome",
+      zoom: 12,
+      target: "ribosome",
+      path: ["ribosome"],
+      title: "② 核糖体：氨基酸脱水缩合，合成多肽",
+      text:
+        "附着在内质网上的核糖体（附着核糖体）以 mRNA 为模板，把氨基酸依次连接起来——相邻氨基酸通过脱水缩合形成肽键，多肽链就在核糖体上合成。核糖体是蛋白质的合成场所，这一步还不需要高尔基体参与。",
+      extra: "拓展：游离核糖体合成胞内蛋白（如呼吸酶），附着核糖体合成分泌蛋白与膜蛋白。"
+    },
+    {
+      ids: ["ribosome", "er"],
+      focus: "er",
+      zoom: 20,
+      target: "er",
+      path: ["ribosome", "er"],
+      title: "③ 内质网：初步加工，出芽形成囊泡",
+      text:
+        "多肽链进入内质网腔，进行折叠、组装并加工，形成具有一定空间结构的蛋白质。内质网是细胞内膜面积最大的细胞器，负责蛋白质的初步加工和运输。加工完成后，内质网以出芽的方式形成囊泡，把蛋白质包裹起来。",
+      extra: "拓展：粗面内质网表面附着核糖体、主要加工蛋白质；光面内质网主要参与脂质合成。"
+    },
+    {
+      ids: ["er", "golgi", "vesicle", "cytoskeleton"],
+      focus: "vesicle",
+      zoom: 22,
+      target: "golgi",
+      path: ["er", "golgi"],
+      title: "④ 囊泡①：沿细胞骨架运往高尔基体",
+      text:
+        "包裹着蛋白质的囊泡沿细胞骨架（微管等）定向运输，到达高尔基体后与高尔基体的膜融合，把蛋白质送入高尔基体。囊泡运输依赖生物膜的流动性，并且需要消耗线粒体提供的能量。",
+      extra: "拓展：细胞骨架除了维持细胞形态，还充当囊泡运输的“轨道”。"
+    },
+    {
+      ids: ["er", "golgi", "vesicle"],
+      focus: "golgi",
+      zoom: 22,
+      target: "golgi",
+      path: ["golgi"],
+      title: "⑤ 高尔基体：再加工、分类与包装",
+      text:
+        "高尔基体对来自内质网的蛋白质进行进一步的修饰加工，然后分类、包装，形成分泌囊泡。注意高尔基体不是蛋白质的合成场所，它只负责“再加工、分类、包装、发送”。植物细胞中，高尔基体还与细胞壁的形成有关。",
+      extra: "易错：分泌蛋白经过高尔基体后，高尔基体膜面积先增大后减小，总体基本不变。"
+    },
+    {
+      ids: ["golgi", "vesicle", "membrane", "cytoskeleton"],
+      focus: "vesicle",
+      zoom: 26,
+      target: "membrane",
+      path: ["golgi", "membrane"],
+      title: "⑥ 囊泡②：运向细胞膜",
+      text:
+        "分泌囊泡继续沿细胞骨架移向细胞膜。囊泡膜与细胞膜同属生物膜，能在结构上相互转化，这是生物膜系统在结构和功能上紧密联系的直接体现。",
+      extra: "拓展：细胞内所有囊泡运输的方向，都由细胞骨架和马达蛋白决定。"
+    },
+    {
+      ids: ["vesicle", "membrane"],
+      focus: "membrane",
+      zoom: 30,
+      target: "membrane",
+      path: ["membrane", "outside"],
+      title: "⑦ 胞吐：把蛋白质分泌到细胞外",
+      text:
+        "分泌囊泡与细胞膜融合，把蛋白质分泌到细胞外，这种方式叫胞吐。回顾放射性出现的位置：核糖体 → 内质网 → 高尔基体 → 分泌囊泡 → 细胞膜（细胞外）——这正是同位素标记法追踪分泌蛋白的经典思路。",
+      extra: "易错：胞吐不需要载体蛋白，但需要消耗能量，且依赖细胞膜的流动性。"
+    },
+    {
+      ids: ["membrane", "cytosol", "nucleus", "ribosome", "er", "golgi", "mitochondrion", "vesicle"],
+      focus: "cell",
+      zoom: 40,
+      target: "cell",
+      path: ["cell"],
+      marker: false,
+      title: "⑧ 结论：多种细胞器的协调配合",
+      text:
+        "整个过程的能量由线粒体（有氧呼吸的主要场所）提供。与分泌蛋白合成、运输直接相关的细胞器是核糖体、内质网、高尔基体、线粒体。膜面积变化：内质网膜面积减小，细胞膜面积增大，高尔基体膜面积基本不变——这说明细胞的各种结构既有分工、又相互配合，共同完成生命活动。",
+      extra: "考点：分泌蛋白的合成与运输体现了生物膜系统在结构和功能上的联系。"
+    }
+  ];
+
+  const pathway = {
+    active: false,
+    step: -1,
+    marker: null,
+    core: null,
+    halo: null,
+    pts: [],
+    anim: 0,
+    conflicts: []
+  };
+
+  const pathBar = document.querySelector("#pathBar");
+  const pathBtn = document.querySelector("#btnPath");
+  const pb = {
+    step: document.querySelector("#pbStep"),
+    dots: document.querySelector("#pbDots"),
+    title: document.querySelector("#pbTitle"),
+    text: document.querySelector("#pbText"),
+    extra: document.querySelector("#pbExtra"),
+    prev: document.querySelector("#pbPrev"),
+    next: document.querySelector("#pbNext"),
+    exit: document.querySelector("#pbExit")
+  };
+
+  /* ---- 幽灵化：让不属于当前步骤的结构淡出 ---- */
+  function setMatGhost(m, ghost) {
+    if (!m) return;
+    const u = m.userData || (m.userData = {});
+    if (m.uniforms && m.uniforms.uOpacity) {
+      if (u.__gU === undefined) u.__gU = m.uniforms.uOpacity.value;
+      m.uniforms.uOpacity.value = ghost ? u.__gU * 0.05 : u.__gU;
+    }
+    if (u.__gB === undefined) u.__gB = { t: m.transparent, o: m.opacity, w: m.depthWrite };
+    const b = u.__gB;
+    const wantT = ghost ? true : !!b.t;
+    if (!!m.transparent !== wantT) {
+      m.transparent = wantT;
+      m.needsUpdate = true;
+    }
+    m.opacity = ghost ? b.o * 0.06 : b.o;
+    m.depthWrite = ghost ? false : b.w;
+  }
+
+  function nodeIdOf(o) {
+    let p = o;
+    while (p) {
+      if (p.userData && p.userData.infoId) return p.userData.infoId;
+      p = p.parent;
+    }
+    return null;
+  }
+
+  function applyPathwayFocus() {
+    if (!cellRoot) return;
+    const step = PATHWAY[pathway.step];
+    const keep = new Set(step ? step.ids : []);
+    cellRoot.traverse((o) => {
+      if (!o.material) return;
+      const id = nodeIdOf(o);
+      const ghost = !!id && !keep.has(id);
+      if (Array.isArray(o.material)) o.material.forEach((m) => setMatGhost(m, ghost));
+      else setMatGhost(o.material, ghost);
+    });
+    labels.forEach((l) => l.el.classList.toggle("ghost", !keep.has(l.id)));
+  }
+
+  function clearPathwayFocus() {
+    if (cellRoot) {
+      cellRoot.traverse((o) => {
+        if (!o.material) return;
+        if (Array.isArray(o.material)) o.material.forEach((m) => setMatGhost(m, false));
+        else setMatGhost(o.material, false);
+      });
+    }
+    labels.forEach((l) => l.el.classList.remove("ghost"));
+  }
+
+  /* 胞质基质的粒子云在动画回调里逐帧改写 opacity，需要每帧重新压暗 */
+  function collectPathwayConflicts() {
+    pathway.conflicts = [];
+    const c = structures.get("cytosol");
+    if (!c || !c.group) return;
+    c.group.traverse((o) => {
+      if (o.material && !o.material.uniforms) pathway.conflicts.push(o.material);
+    });
+  }
+
+  /* ---- 路径取点 ---- */
+  function pathPoint(id) {
+    if (id === "cell") return new V3(0, 0.4, 0);
+    if (id === "membrane" || id === "outside") {
+      const dir = new V3(6.4, -1.6, 6.5).normalize();
+      return dir.multiplyScalar(id === "outside" ? CELL_R * 1.18 : CELL_R * 0.985);
+    }
+    const e = structures.get(id);
+    if (!e) return null;
+    const v = new V3();
+    (e.anchor || e.group).getWorldPosition(v);
+    return v;
+  }
+
+  function buildPathwayMarker() {
+    const g = new THREE.Group();
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(0.3, 18, 14),
+      new THREE.MeshBasicMaterial({ color: 0xd9fff5 })
+    );
+    g.add(core);
+    const halo = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: glowTex,
+        color: 0x6ff5d8,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    halo.scale.set(3.4, 3.4, 1);
+    g.add(halo);
+    g.traverse((o) => {
+      o.raycast = () => {};
+    });
+    g.visible = false;
+    scene.add(g);
+    pathway.core = core;
+    pathway.halo = halo;
+    return g;
+  }
+
+  function layoutPathway() {
+    const step = PATHWAY[pathway.step];
+    if (!step || !pathway.marker) return;
+    const pts = [];
+    (step.path || []).forEach((id) => {
+      const p = pathPoint(id);
+      if (p) pts.push(p);
+    });
+    if (!pts.length) pts.push(new V3(0, 0.4, 0));
+    pathway.pts = pts;
+    pathway.anim = 0;
+    pathway.marker.visible = step.marker !== false;
+    pathway.marker.position.copy(pts[0]);
+
+    const tgt = step.target ? pathPoint(step.target) : pts[pts.length - 1];
+    if (tgt) orbit.targetGoal.copy(tgt);
+    if (step.zoom) orbit.radiusGoal = clamp(step.zoom, 3, 44);
+    orbit.auto = false;
+    orbit.idle = 0;
+  }
+
+  function pathwayUI() {
+    const step = PATHWAY[pathway.step];
+    if (!step) return;
+    if (pb.step) pb.step.textContent = "步骤 " + (pathway.step + 1) + " / " + PATHWAY.length;
+    if (pb.title) pb.title.textContent = step.title;
+    if (pb.text) pb.text.textContent = step.text;
+    if (pb.extra) pb.extra.textContent = step.extra || "";
+    if (pb.dots) {
+      pb.dots.innerHTML = PATHWAY.map((s, i) => '<i class="' + (i === pathway.step ? "on" : "") + '"></i>').join("");
+    }
+    if (pb.prev) pb.prev.disabled = pathway.step === 0;
+    if (pb.next) pb.next.disabled = pathway.step === PATHWAY.length - 1;
+    if (pb.text) pb.text.scrollTop = 0;
+  }
+
+  function pathwayGo(i) {
+    if (!pathway.active) return;
+    const n = PATHWAY.length;
+    pathway.step = ((i % n) + n) % n;
+    applyPathwayFocus();
+    layoutPathway();
+    pathwayUI();
+  }
+
+  function openPathway() {
+    if (pathway.active) return;
+    pathway.active = true;
+    if (state.introOpen) dismissIntro(false);
+    if (panel.classList.contains("open")) closePanel();
+    const wasWalking = state.view === "walk";
+    if (wasWalking) exitWalk();
+    if (!pathway.marker) pathway.marker = buildPathwayMarker();
+    collectPathwayConflicts();
+    document.body.classList.add("pathway");
+    if (pathBar) pathBar.setAttribute("aria-hidden", "false");
+    if (pathBtn) pathBtn.classList.add("on");
+    orbit.auto = false;
+    pathwayGo(0);
+    showToast("路径演示：用「‹ ›」或方向键切换步骤，Esc 退出");
+    if (wasWalking) {
+      // 退出漫游有一段镜头动画，结束后再定位到第一步
+      setTimeout(() => {
+        if (pathway.active) layoutPathway();
+      }, 1500);
+    }
+  }
+
+  function closePathway() {
+    if (!pathway.active) return;
+    pathway.active = false;
+    pathway.step = -1;
+    document.body.classList.remove("pathway");
+    if (pathBar) pathBar.setAttribute("aria-hidden", "true");
+    if (pathBtn) pathBtn.classList.remove("on");
+    if (pathway.marker) pathway.marker.visible = false;
+    clearPathwayFocus();
+    orbit.auto = true;
+    showToast("已退出路径演示");
+  }
+
+  function updatePathway(dt) {
+    const step = PATHWAY[pathway.step];
+    if (!step || !pathway.marker) return;
+    const keep = new Set(step.ids);
+    pathway.conflicts.forEach((m) => setMatGhost(m, !keep.has("cytosol")));
+    if (!pathway.marker.visible) return;
+    const pts = pathway.pts;
+    pathway.anim = Math.min(1, pathway.anim + dt / 3.0);
+    const t = ease(pathway.anim);
+    if (pts.length > 1) {
+      const n = pts.length - 1;
+      const f = t * n;
+      const i = Math.min(n - 1, Math.floor(f));
+      pathway.marker.position.lerpVectors(pts[i], pts[i + 1], f - i);
+    }
+    const pulse = 1 + Math.sin(elapsed * 3.4) * 0.14;
+    if (pathway.halo) pathway.halo.scale.set(3.4 * pulse, 3.4 * pulse, 1);
+    if (pathway.core) pathway.core.scale.setScalar(0.92 + Math.sin(elapsed * 3.4) * 0.12);
+  }
+
+  if (pathBtn) pathBtn.addEventListener("click", () => (pathway.active ? closePathway() : openPathway()));
+  if (pb.prev) pb.prev.addEventListener("click", () => pathwayGo(pathway.step - 1));
+  if (pb.next) pb.next.addEventListener("click", () => pathwayGo(pathway.step + 1));
+  if (pb.exit) pb.exit.addEventListener("click", closePathway);
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (!pathway.active) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        closePathway();
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        e.stopPropagation();
+        pathwayGo(pathway.step + 1);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        e.stopPropagation();
+        pathwayGo(pathway.step - 1);
+      }
+    },
+    true
+  );
+
+  // 演示进行中点击标签只打开知识卡，不改变镜头，以免破坏当前步骤的取景
+  const __pathwaySelect = select;
+  select = function (id, opts) {
+    if (pathway.active) {
+      const merged = Object.assign({}, opts || {});
+      merged.focus = false;
+      return __pathwaySelect(id, merged);
+    }
+    return __pathwaySelect(id, opts);
+  };
+
+  // 切换动物 / 植物细胞会重建场景，重建后要重新套用当前步骤的图层状态
+  const __pathwayRebuild = rebuildScene;
+  rebuildScene = function () {
+    __pathwayRebuild();
+    if (pathway.active) {
+      collectPathwayConflicts();
+      applyPathwayFocus();
+      layoutPathway();
+    }
+  };
+
+  /* ==== TRANSPORT LAB BEGIN ====
+     第4章《细胞的物质输入和输出》· 跨膜运输实验室
+     2D 膜片段动画（与 3D 场景独立），按钮切换 6 种运输方式。
+     上方 = 细胞外，下方 = 细胞内。 */
+  const TRANSPORT = [
+    {
+      key: "free", name: "自由扩散", group: "被动运输", color: "#6fd8ff",
+      dir: "高浓度 → 低浓度", carrier: "不需要", energy: "不消耗",
+      outN: 30, inN: 8,
+      text: "物质通过简单的扩散作用进出细胞，不需要转运蛋白，也不消耗能量。磷脂双分子层内部是疏水的，所以小分子气体和脂溶性物质最容易直接穿过。",
+      examples: "O₂、CO₂、甘油、乙醇、苯等脂溶性小分子；少量水分子也可以自由扩散",
+      factor: "只取决于膜两侧的浓度差：浓度差越大，速率越大，曲线是一条过原点的直线。",
+      exam: "易错：自由扩散与转运蛋白无关，所以加入蛋白质抑制剂或改变 O₂ 浓度，都不影响它的速率。"
+    },
+    {
+      key: "channel", name: "协助扩散 · 通道蛋白", group: "被动运输", color: "#7fe08b",
+      dir: "高浓度 → 低浓度", carrier: "需要（通道蛋白）", energy: "不消耗",
+      outN: 30, inN: 8,
+      text: "通道蛋白在膜上形成亲水通道，只允许与通道直径、形状相适配，且大小和电荷合适的分子或离子通过。分子或离子通过通道时，不需要与通道蛋白结合。",
+      examples: "水分子大多借助水通道蛋白进出细胞；神经细胞的 K⁺ 外流、Na⁺ 内流",
+      factor: "受浓度差和通道蛋白数量共同影响：浓度差增大到一定程度后，速率不再增加（曲线出现平台）。",
+      exam: "易错：通道蛋白不与运输的物质结合；载体蛋白每次转运都要与物质结合并发生自身构象改变。"
+    },
+    {
+      key: "carrier", name: "协助扩散 · 载体蛋白", group: "被动运输", color: "#ffd166",
+      dir: "高浓度 → 低浓度", carrier: "需要（载体蛋白）", energy: "不消耗",
+      outN: 30, inN: 8,
+      text: "载体蛋白只容许与自身结合部位相适应的分子或离子通过，每次转运时都会与物质结合，并发生自身构象的改变，把物质从膜的一侧送到另一侧。",
+      examples: "葡萄糖进入人的红细胞",
+      factor: "受浓度差和载体蛋白数量影响，存在饱和现象；与 O₂ 浓度（能量）无关。",
+      exam: "易错：“需要载体”不等于“主动运输”。判断主动运输看的是是否逆浓度梯度、是否耗能。"
+    },
+    {
+      key: "active", name: "主动运输", group: "主动运输", color: "#ff9d8a",
+      dir: "低浓度 → 高浓度（逆浓度梯度）", carrier: "需要（载体蛋白）", energy: "消耗（细胞呼吸产生的 ATP 等）",
+      outN: 8, inN: 30,
+      text: "物质逆浓度梯度进行跨膜运输，需要载体蛋白的协助，同时消耗细胞内化学反应释放的能量。主动运输保证了活细胞能按照生命活动的需要，主动选择吸收所需物质、排出代谢废物和有害物质。",
+      examples: "小肠上皮细胞吸收葡萄糖、氨基酸；植物根细胞吸收无机盐离子（如 K⁺、NO₃⁻）；轮藻细胞积累 K⁺",
+      factor: "受载体蛋白数量和能量供应影响：O₂ 浓度为 0 时，无氧呼吸仍能供少量能量，所以速率不为 0；O₂ 增大到一定程度后，受载体数量限制出现平台。",
+      exam: "易错：载体蛋白具有特异性，这是细胞膜选择透过性的结构基础；温度会同时影响膜的流动性和酶活性，从而影响所有运输方式。"
+    },
+    {
+      key: "endo", name: "胞吞", group: "胞吞胞吐", color: "#b58cff",
+      dir: "细胞外 → 细胞内（大分子、颗粒）", carrier: "不需要转运蛋白，但需要膜上蛋白质识别结合", energy: "消耗",
+      outN: 0, inN: 0,
+      text: "大分子与膜上的蛋白质结合，引起这部分细胞膜内陷形成小囊，包围着大分子；小囊从细胞膜上分离，形成囊泡进入细胞内部。",
+      examples: "变形虫摄取食物颗粒；白细胞（吞噬细胞）吞噬病菌",
+      factor: "依赖细胞膜的流动性，消耗能量；温度、能量供应会影响胞吞速率。",
+      exam: "易错：胞吞胞吐不穿过膜（穿膜层数为 0），但需要膜上蛋白质参与识别，体现了膜的流动性。"
+    },
+    {
+      key: "exo", name: "胞吐", group: "胞吞胞吐", color: "#ff85c8",
+      dir: "细胞内 → 细胞外（大分子）", carrier: "不需要转运蛋白", energy: "消耗",
+      outN: 0, inN: 0,
+      text: "细胞需要外排的大分子，先在细胞内形成囊泡；囊泡移动到细胞膜处，与细胞膜融合，把大分子排出细胞。分泌蛋白就是这样离开细胞的（可在「路径演示」第 7 步看到）。",
+      examples: "分泌蛋白（消化酶、抗体、胰岛素）的分泌；神经递质的释放",
+      factor: "依赖细胞膜的流动性，消耗能量；胞吐后细胞膜面积增大。",
+      exam: "易错：神经递质多为小分子，但通过胞吐释放，因此“胞吐只运输大分子”的说法不准确。"
+    }
+  ];
+
+  const lab = { open: false, mode: 0, raf: 0, last: 0, t: 0, W: 0, H: 0, dpr: 1, bg: [], cross: [], spawn: 0 };
+  const labEl = document.querySelector("#labModal");
+  const labCanvas = document.querySelector("#labCanvas");
+  const labCtx = labCanvas && labCanvas.getContext ? labCanvas.getContext("2d") : null;
+  const labTabs = document.querySelector("#labTabs");
+  const labInfo = document.querySelector("#labInfo");
+  const labBtn = document.querySelector("#btnLab");
+
+  function labResize() {
+    if (!labCanvas) return;
+    const r = labCanvas.getBoundingClientRect();
+    lab.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    lab.W = Math.max(280, r.width || 600);
+    lab.H = Math.max(200, r.height || 300);
+    labCanvas.width = Math.round(lab.W * lab.dpr);
+    labCanvas.height = Math.round(lab.H * lab.dpr);
+  }
+
+  function labSeed() {
+    const m = TRANSPORT[lab.mode];
+    const W = lab.W, H = lab.H, mid = H / 2;
+    lab.bg = [];
+    lab.cross = [];
+    lab.t = 0;
+    lab.spawn = 0;
+    const mk = (n, top) => {
+      for (let i = 0; i < n; i++) {
+        lab.bg.push({
+          x: 14 + Math.random() * (W - 28),
+          y: top ? 14 + Math.random() * (mid - 50) : mid + 36 + Math.random() * (mid - 50),
+          vx: (Math.random() - 0.5) * 30, vy: (Math.random() - 0.5) * 30, top: top
+        });
+      }
+    };
+    mk(m.outN, true);
+    mk(m.inN, false);
+  }
+
+  function labRenderInfo() {
+    const m = TRANSPORT[lab.mode];
+    if (labTabs) {
+      labTabs.innerHTML = TRANSPORT.map((x, i) =>
+        '<button class="lab-tab' + (i === lab.mode ? " on" : "") + '" data-i="' + i + '" style="--c:' + x.color + '">' +
+        '<small>' + x.group + "</small>" + x.name + "</button>").join("");
+      labTabs.querySelectorAll("[data-i]").forEach((b) =>
+        b.addEventListener("click", () => labSet(Number(b.dataset.i))));
+    }
+    if (labInfo) {
+      labInfo.innerHTML =
+        '<div class="lab-facts">' +
+          '<div><b>方向</b>' + m.dir + "</div>" +
+          '<div><b>转运蛋白</b>' + m.carrier + "</div>" +
+          '<div><b>能量</b>' + m.energy + "</div>" +
+        "</div>" +
+        "<p>" + m.text + "</p>" +
+        '<p class="lab-ex"><b>实例</b>' + m.examples + "</p>" +
+        '<p class="lab-ex"><b>影响因素</b>' + m.factor + "</p>" +
+        '<div class="lab-exam">' + m.exam + "</div>";
+    }
+  }
+
+  function labSet(i) {
+    lab.mode = ((i % TRANSPORT.length) + TRANSPORT.length) % TRANSPORT.length;
+    labSeed();
+    labRenderInfo();
+  }
+
+  function labStep(dt) {
+    const m = TRANSPORT[lab.mode];
+    const W = lab.W, H = lab.H, mid = H / 2, half = 20, cx = W / 2;
+    lab.t += dt;
+    lab.bg.forEach((p) => {
+      p.vx += (Math.random() - 0.5) * 60 * dt;
+      p.vy += (Math.random() - 0.5) * 60 * dt;
+      p.vx = clamp(p.vx, -26, 26);
+      p.vy = clamp(p.vy, -26, 26);
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      const y0 = p.top ? 10 : mid + half + 8, y1 = p.top ? mid - half - 8 : H - 10;
+      if (p.x < 10 || p.x > W - 10) { p.vx *= -1; p.x = clamp(p.x, 10, W - 10); }
+      if (p.y < y0 || p.y > y1) { p.vy *= -1; p.y = clamp(p.y, y0, y1); }
+    });
+    if (m.key === "endo" || m.key === "exo") return;
+    lab.spawn -= dt;
+    if (lab.spawn <= 0) {
+      lab.spawn = m.key === "free" ? 0.45 : 0.9;
+      const x = m.key === "free" ? 30 + Math.random() * (W - 60) : cx;
+      const sx = m.key === "free" ? x : 30 + Math.random() * (W - 60);
+      lab.cross.push({
+        pts: [
+          { x: sx, y: 14 + Math.random() * (mid - 60) },
+          { x: x, y: mid - half - 6 },
+          { x: x, y: mid + half + 6 },
+          { x: 30 + Math.random() * (W - 60), y: mid + 40 + Math.random() * (mid - 60) }
+        ],
+        u: 0
+      });
+    }
+    lab.cross.forEach((c) => { c.u += dt / (m.key === "free" ? 2.4 : 3.0); });
+    lab.cross = lab.cross.filter((c) => c.u < 1.15);
+  }
+
+  function crossPos(c) {
+    const u = clamp(c.u, 0, 1) * 3;
+    const i = Math.min(2, Math.floor(u));
+    const f = u - i;
+    const a = c.pts[i], b = c.pts[i + 1];
+    return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, seg: i };
+  }
+
+  function drawMembrane(g, W, mid, dip, dipX, dipW) {
+    // dip：胞吞/胞吐时膜局部凹陷的深度（正值向下 = 向细胞内）
+    const step = 13;
+    for (let x = 6; x < W; x += step) {
+      let off = 0;
+      if (dip && Math.abs(x - dipX) < dipW) off = dip * Math.cos(((x - dipX) / dipW) * (PI / 2)) ** 2;
+      [-14, 14].forEach((dy) => {
+        g.strokeStyle = "rgba(255,192,106,.35)";
+        g.lineWidth = 1.4;
+        g.beginPath();
+        g.moveTo(x - 1.5, mid + dy + off);
+        g.lineTo(x - 1.5, mid + dy * 0.15 + off);
+        g.moveTo(x + 1.5, mid + dy + off);
+        g.lineTo(x + 1.5, mid + dy * 0.15 + off);
+        g.stroke();
+        g.fillStyle = "#5fe8d4";
+        g.beginPath();
+        g.arc(x, mid + dy + off, 4.2, 0, TAU);
+        g.fill();
+      });
+    }
+  }
+
+  function dot(g, x, y, r, color) {
+    g.fillStyle = color;
+    g.beginPath();
+    g.arc(x, y, r, 0, TAU);
+    g.fill();
+  }
+
+  function labDraw() {
+    if (!labCtx) return;
+    const g = labCtx, m = TRANSPORT[lab.mode];
+    const W = lab.W, H = lab.H, mid = H / 2, cx = W / 2;
+    g.setTransform(lab.dpr, 0, 0, lab.dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    g.fillStyle = "rgba(111,216,255,.05)";
+    g.fillRect(0, 0, W, mid);
+    g.fillStyle = "rgba(181,140,255,.05)";
+    g.fillRect(0, mid, W, H - mid);
+    g.font = "11px sans-serif";
+    g.fillStyle = "#96b9b3";
+    g.fillText("细胞外", 10, 18);
+    g.fillText("细胞内（细胞质）", 10, H - 10);
+
+    if (m.key === "endo" || m.key === "exo") {
+      drawBulk(g, m, W, H, mid, cx);
+      return;
+    }
+    drawMembrane(g, W, mid);
+    if (m.key !== "free") {
+      // 转运蛋白
+      g.fillStyle = m.key === "channel" ? "rgba(127,224,139,.75)" : m.key === "carrier" ? "rgba(255,209,102,.75)" : "rgba(255,157,138,.78)";
+      if (m.key === "channel") {
+        g.fillRect(cx - 22, mid - 24, 13, 48);
+        g.fillRect(cx + 9, mid - 24, 13, 48);
+      } else {
+        const phase = (Math.sin(lab.t * 3.3) + 1) / 2; // 构象改变：开口朝外 ↔ 朝内
+        g.beginPath();
+        g.moveTo(cx - 20, mid - 24 + phase * 8);
+        g.lineTo(cx - 7 - (1 - phase) * 4, mid - 24);
+        g.lineTo(cx - 9, mid + 24);
+        g.lineTo(cx - 20, mid + 24 - (1 - phase) * 8);
+        g.closePath();
+        g.fill();
+        g.beginPath();
+        g.moveTo(cx + 20, mid - 24 + phase * 8);
+        g.lineTo(cx + 7 + (1 - phase) * 4, mid - 24);
+        g.lineTo(cx + 9, mid + 24);
+        g.lineTo(cx + 20, mid + 24 - (1 - phase) * 8);
+        g.closePath();
+        g.fill();
+      }
+    }
+    lab.bg.forEach((p) => dot(g, p.x, p.y, 3.4, m.color));
+    lab.cross.forEach((c) => {
+      const p = crossPos(c);
+      dot(g, p.x, p.y, 4.4, "#ffffff");
+      dot(g, p.x, p.y, 2.6, m.color);
+      if (m.key === "active" && p.seg === 1) {
+        g.fillStyle = "#ffcf5c";
+        g.font = "bold 11px sans-serif";
+        g.fillText("ATP → ADP + Pi", cx + 28, mid + 40);
+      }
+    });
+    g.font = "11px sans-serif";
+    g.fillStyle = "#ebfffa";
+    g.fillText(m.outN > m.inN ? "浓度高" : "浓度低", W - 62, 18);
+    g.fillText(m.inN > m.outN ? "浓度高" : "浓度低", W - 62, H - 10);
+  }
+
+  function drawBulk(g, m, W, H, mid, cx) {
+    const T = 4.2;
+    const u = (lab.t % T) / T;
+    const endo = m.key === "endo";
+    // 0–0.55 膜凹陷/融合，0.55–1 囊泡离开/内容物释放
+    let dip = 0, vy = null;
+    if (endo) {
+      dip = u < 0.55 ? (u / 0.55) * 46 : Math.max(0, 46 - ((u - 0.55) / 0.12) * 46);
+      vy = u < 0.55 ? mid - 26 + (u / 0.55) * 46 : mid + 20 + ((u - 0.55) / 0.45) * (mid - 50);
+    } else {
+      vy = u < 0.5 ? H - 30 - (u / 0.5) * (mid - 50) : null;
+      dip = u >= 0.5 && u < 0.75 ? 34 * (1 - (u - 0.5) / 0.25) : 0;
+    }
+    drawMembrane(g, W, mid, dip, cx, 48);
+    // 膜受体
+    g.fillStyle = "rgba(181,140,255,.8)";
+    if (endo && u < 0.4) {
+      g.fillRect(cx - 18, mid - 24, 6, 10);
+      g.fillRect(cx + 12, mid - 24, 6, 10);
+    }
+    if (vy !== null) {
+      const vesicle = endo ? u >= 0.55 : true;
+      if (vesicle) {
+        g.strokeStyle = "#5fe8d4";
+        g.lineWidth = 3;
+        g.beginPath();
+        g.arc(cx, vy, 20, 0, TAU);
+        g.stroke();
+      }
+      dot(g, cx, vy, 9, m.color);
+    }
+    if (!endo && u >= 0.5) {
+      const k = (u - 0.5) / 0.5;
+      for (let i = 0; i < 6; i++) {
+        const a = -PI / 2 + (i - 2.5) * 0.35;
+        dot(g, cx + Math.cos(a) * k * 90, mid - 10 + Math.sin(a) * k * 90, 4, m.color);
+      }
+    }
+    g.fillStyle = "#ffcf5c";
+    g.font = "bold 11px sans-serif";
+    g.fillText("消耗 ATP", cx + 60, mid + 44);
+  }
+
+  function labLoop(now) {
+    if (!lab.open) return;
+    const dt = Math.min(0.05, ((now || 0) - lab.last) / 1000 || 0.016);
+    lab.last = now || 0;
+    labStep(dt);
+    labDraw();
+    lab.raf = requestAnimationFrame(labLoop);
+  }
+
+  function openLab(i) {
+    if (!labEl) return;
+    if (typeof pathway !== "undefined" && pathway.active) closePathway();
+    if (state.introOpen) dismissIntro(false);
+    lab.open = true;
+    labEl.classList.add("open");
+    labEl.setAttribute("aria-hidden", "false");
+    if (labBtn) labBtn.classList.add("on");
+    labResize();
+    labSet(i == null ? lab.mode : i);
+    lab.last = performance.now();
+    cancelAnimationFrame(lab.raf);
+    lab.raf = requestAnimationFrame(labLoop);
+  }
+
+  function closeLab() {
+    if (!lab.open) return;
+    lab.open = false;
+    cancelAnimationFrame(lab.raf);
+    labEl.classList.remove("open");
+    labEl.setAttribute("aria-hidden", "true");
+    if (labBtn) labBtn.classList.remove("on");
+  }
+
+  if (labBtn) labBtn.addEventListener("click", () => (lab.open ? closeLab() : openLab()));
+  const labClose = document.querySelector("#labClose");
+  if (labClose) labClose.addEventListener("click", closeLab);
+  if (labEl) labEl.addEventListener("click", (e) => { if (e.target === labEl) closeLab(); });
+  window.addEventListener("resize", () => { if (lab.open) { labResize(); labSeed(); } });
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (!lab.open) return;
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeLab(); return; }
+      if (e.key === "ArrowRight") { e.preventDefault(); e.stopPropagation(); labSet(lab.mode + 1); return; }
+      if (e.key === "ArrowLeft") { e.preventDefault(); e.stopPropagation(); labSet(lab.mode - 1); return; }
+      // 打开实验室时屏蔽 WASD / 数字键等场景快捷键
+      e.stopPropagation();
+    },
+    true
+  );
+  /* ==== TRANSPORT LAB END ==== */
+  /* ==== LAB LINK BEGIN ==== 知识卡 → 跨膜运输实验室 */
+  const LAB_LINK = { membrane: 0, protein: 2, atp: 3, vesicle: 5, water: 1, ion: 3, sugar: 2 };
+  const __labRender = renderPanel;
+  renderPanel = function (id) {
+    __labRender(id);
+    if (!(id in LAB_LINK) || !panelScroll) return;
+    const sec = document.createElement("section");
+    sec.className = "sec";
+    sec.innerHTML = '<h3><span class="idx">↗</span>第4章 · 跨膜运输</h3>' +
+      '<div class="rel"><button data-lab="' + LAB_LINK[id] + '"><span class="d" style="--c:#ff9d8a"></span>打开跨膜运输实验室：' +
+      TRANSPORT[LAB_LINK[id]].name + "</button></div>";
+    panelScroll.appendChild(sec);
+    sec.querySelector("[data-lab]").addEventListener("click", (e) => openLab(Number(e.currentTarget.dataset.lab)));
+  };
+  /* ==== LAB LINK END ==== */
+
+  /* ==== PLANT BOX + PATHWAY LIVE BEGIN ==== */
+  /* ---------- 1. 植物细胞：类矩形（圆角长方体）细胞壁与细胞膜 ---------- */
+  const BOX = { n: 5, ax: 1.32, ay: 1.0, az: 1.06 };
+  function boxMap(p, R0) {
+    const r = p.length();
+    if (r < 1e-6) return p.clone();
+    const d = p.clone().multiplyScalar(1 / r);
+    const s = Math.pow(
+      Math.pow(Math.abs(d.x) / (R0 * BOX.ax), BOX.n) +
+      Math.pow(Math.abs(d.y) / (R0 * BOX.ay), BOX.n) +
+      Math.pow(Math.abs(d.z) / (R0 * BOX.az), BOX.n),
+      -1 / BOX.n
+    );
+    return d.multiplyScalar(s * (r / R0));
+  }
+  function boxifyGroup(g, R0) {
+    if (!g) return;
+    const v = new V3();
+    const m4 = new THREE.Matrix4();
+    const pos = new V3(), q = new THREE.Quaternion(), sc = new V3();
+    g.traverse((o) => {
+      if (o.isSprite) return;
+      if (o.isInstancedMesh) {
+        for (let i = 0; i < o.count; i++) {
+          o.getMatrixAt(i, m4);
+          m4.decompose(pos, q, sc);
+          m4.compose(boxMap(pos, R0), q, sc);
+          o.setMatrixAt(i, m4);
+        }
+        o.instanceMatrix.needsUpdate = true;
+        return;
+      }
+      if (!o.geometry || !o.geometry.attributes || !o.geometry.attributes.position) return;
+      if (o.position.length() > 1) {
+        // 小部件（如胞间连丝）：只移动位置
+        o.position.copy(boxMap(o.position, R0));
+        return;
+      }
+      const a = o.geometry.attributes.position;
+      for (let i = 0; i < a.count; i++) {
+        v.set(a.getX(i), a.getY(i), a.getZ(i));
+        const w = boxMap(v, R0);
+        a.setXYZ(i, w.x, w.y, w.z);
+      }
+      a.needsUpdate = true;
+      if (o.isMesh) o.geometry.computeVertexNormals();
+      o.geometry.computeBoundingSphere();
+    });
+  }
+  const __boxMembrane = buildMembrane;
+  buildMembrane = function (plant) {
+    __boxMembrane(plant);
+    if (plant && structures.has("membrane")) boxifyGroup(structures.get("membrane").group, CELL_R);
+  };
+  const __boxWall = buildWall;
+  buildWall = function () {
+    __boxWall();
+    if (structures.has("wall")) boxifyGroup(structures.get("wall").group, 18.35);
+  };
+  const __boxPathPoint = pathPoint;
+  pathPoint = function (id) {
+    const p = __boxPathPoint(id);
+    if (p && state.mode === "plant" && (id === "membrane" || id === "outside")) {
+      return boxMap(p.clone().normalize().multiplyScalar(id === "outside" ? 20.5 : 16.8), 17);
+    }
+    return p;
+  };
+
+  /* ---------- 2. 路径演示：自动播放 + 实时标注 + 同位素追踪 ---------- */
+  const STEP_DUR = 11; // 每步停留秒数（标记点到位后开始计时）
+  // 放射性分布（示意数据，参照 Palade 用 ³H-亮氨酸标记豚鼠胰腺腺泡细胞的经典实验）
+  const RADIO = [
+    { t: "0 min · 加入 ³H-亮氨酸", v: [0, 0, 0, 0] },
+    { t: "约 3 min", v: [86, 8, 4, 2] },
+    { t: "3 ~ 10 min", v: [78, 16, 4, 2] },
+    { t: "约 10 min", v: [46, 40, 11, 3] },
+    { t: "约 20 min", v: [20, 66, 12, 2] },
+    { t: "约 60 min", v: [9, 22, 61, 8] },
+    { t: "约 117 min", v: [5, 9, 44, 42] },
+    { t: "全过程回顾", v: [5, 9, 44, 42] }
+  ];
+  const RADIO_NAMES = ["核糖体 / 内质网", "高尔基体", "分泌囊泡", "细胞外"];
+  const LOC = [
+    "³H-亮氨酸 → 进入细胞", "³H 位于：附着核糖体", "³H 位于：内质网腔", "³H 位于：囊泡①（内质网→高尔基体）",
+    "³H 位于：高尔基体", "³H 位于：分泌囊泡②", "³H 位于：细胞外（胞吐）", "协调配合 · 全景"
+  ];
+  // 能量由线粒体提供：除第 1 步和总结外都显示线粒体
+  PATHWAY.forEach((s, i) => { if (i > 0 && !s.ids.includes("mitochondrion")) s.ids.push("mitochondrion"); });
+
+  const live = { auto: true, timer: 0, bars: [0, 0, 0, 0], stream: [], energy: [], group: null };
+
+  // UI：播放/暂停、进度条、放射性柱状图、3D 实时标注
+  const pbShell = document.querySelector("#pathBar .pb-shell");
+  const pbBody = document.querySelector("#pathBar .pb-body");
+  const playBtn = document.createElement("button");
+  playBtn.className = "pb-btn pw-play";
+  playBtn.setAttribute("aria-label", "暂停自动播放");
+  if (pbShell && pb.next) pbShell.insertBefore(playBtn, pb.next);
+  const liveEl = document.createElement("div");
+  liveEl.className = "pw-live";
+  liveEl.innerHTML =
+    '<div class="pw-prog"><i id="pwProg"></i></div>' +
+    '<div class="pw-head"><b>同位素标记追踪 · 放射性分布</b><span id="pwTime">—</span></div>' +
+    '<div class="pw-bars">' + RADIO_NAMES.map((n, i) =>
+      '<div class="pw-bar"><span>' + n + '</span><div class="pw-track"><i id="pwBar' + i + '"></i></div><em id="pwVal' + i + '">0%</em></div>').join("") +
+    '</div><div class="pw-note">示意数据 · 依次出现放射性的部位揭示了分泌蛋白的运输路线</div>';
+  if (pbBody) pbBody.appendChild(liveEl);
+  const callout = document.createElement("div");
+  callout.id = "pwCallout";
+  document.body.appendChild(callout);
+  const energyTag = document.createElement("div");
+  energyTag.id = "pwEnergy";
+  energyTag.textContent = "线粒体 · 供能 ATP";
+  document.body.appendChild(energyTag);
+
+  function setPlayIcon() {
+    playBtn.innerHTML = live.auto
+      ? '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M7 5l12 7-12 7Z"/></svg>';
+    playBtn.setAttribute("aria-label", live.auto ? "暂停自动播放" : "继续自动播放");
+  }
+  playBtn.addEventListener("click", () => { live.auto = !live.auto; setPlayIcon(); });
+  setPlayIcon();
+
+  function liveDot(color, size) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, color: color, transparent: true, opacity: 0.95,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    }));
+    s.scale.set(size, size, 1);
+    s.raycast = () => {};
+    return s;
+  }
+  function ensureLive() {
+    if (live.group) return;
+    live.group = new THREE.Group();
+    for (let i = 0; i < 12; i++) { const s = liveDot(0x6ff5d8, 1.1); live.stream.push(s); live.group.add(s); }
+    for (let i = 0; i < 7; i++) { const s = liveDot(0xffcf5c, 0.9); live.energy.push(s); live.group.add(s); }
+    live.group.visible = false;
+    scene.add(live.group);
+  }
+
+  function screenOf(p) {
+    const v = p.clone().project(camera);
+    if (v.z > 1 || v.z < -1) return null;
+    return { x: (v.x * 0.5 + 0.5) * window.innerWidth, y: (-v.y * 0.5 + 0.5) * window.innerHeight };
+  }
+  function pathAt(pts, u) {
+    if (pts.length < 2) return pts[0].clone();
+    if (!isFinite(u)) u = 0;
+    u = Math.min(1, Math.max(0, u));
+    const n = pts.length - 1, f = u * n, i = Math.max(0, Math.min(n - 1, Math.floor(f)));
+    return new V3().lerpVectors(pts[i], pts[i + 1], f - i);
+  }
+
+  const __liveGo = pathwayGo;
+  pathwayGo = function (i) {
+    __liveGo(i);
+    live.timer = 0;
+    const r = RADIO[pathway.step];
+    const tEl = document.querySelector("#pwTime");
+    if (r && tEl) tEl.textContent = r.t;
+    callout.textContent = LOC[pathway.step] || "";
+  };
+  const __liveOpen = openPathway;
+  openPathway = function () {
+    ensureLive();
+    live.auto = true; live.bars = [0, 0, 0, 0]; setPlayIcon();
+    __liveOpen();
+    live.group.visible = true;
+    document.body.classList.add("pw-live-on");
+  };
+  const __liveClose = closePathway;
+  closePathway = function () {
+    __liveClose();
+    if (live.group) live.group.visible = false;
+    document.body.classList.remove("pw-live-on");
+    callout.classList.remove("on");
+    energyTag.classList.remove("on");
+  };
+  // 原有按钮与方向键监听都按名字调用 openPathway / closePathway / pathwayGo，会自动走到新版本；这里只补空格键暂停
+  window.addEventListener("keydown", (e) => {
+    if (!pathway.active || e.code !== "Space") return;
+    e.preventDefault(); e.stopPropagation();
+    live.auto = !live.auto; setPlayIcon();
+  }, true);
+
+  const __liveUpdate = updatePathway;
+  updatePathway = function (dt) {
+    __liveUpdate(dt);
+    const step = PATHWAY[pathway.step];
+    if (!step || !live.group) return;
+    // 自动播放
+    if (live.auto && pathway.anim >= 1) {
+      live.timer += dt;
+      if (live.timer >= STEP_DUR) {
+        if (pathway.step < PATHWAY.length - 1) pathwayGo(pathway.step + 1);
+        else { live.auto = false; setPlayIcon(); }
+      }
+    }
+    const prog = document.querySelector("#pwProg");
+    if (prog) prog.style.width = (live.auto ? Math.min(1, live.timer / STEP_DUR) * 100 : 0).toFixed(1) + "%";
+    // 放射性柱状图平滑过渡
+    const target = (RADIO[pathway.step] || RADIO[0]).v;
+    for (let i = 0; i < 4; i++) {
+      live.bars[i] = damp(live.bars[i], target[i], 3, dt);
+      const b = document.querySelector("#pwBar" + i), t = document.querySelector("#pwVal" + i);
+      if (b) b.style.width = live.bars[i].toFixed(1) + "%";
+      if (t) t.textContent = Math.round(live.bars[i]) + "%";
+    }
+    // ³H 标记粒子流：沿当前路径循环流动
+    const pts = pathway.pts.length ? pathway.pts : [new V3(0, 0.4, 0)];
+    const showStream = step.marker !== false;
+    live.stream.forEach((s, i) => {
+      s.visible = showStream;
+      if (!showStream) return;
+      const u = (elapsed * 0.32 + i / live.stream.length) % 1;
+      const p = pathAt(pts, u);
+      p.x += Math.sin(i * 7.1 + elapsed) * 0.35;
+      p.y += Math.cos(i * 3.7 + elapsed * 1.3) * 0.35;
+      s.position.copy(p);
+      s.material.opacity = 0.35 + 0.6 * Math.sin(u * PI);
+    });
+    // 线粒体供能：ATP 粒子从线粒体流向标记位置
+    const mito = structures.get("mitochondrion");
+    const showE = !!mito && step.ids.includes("mitochondrion") && step.marker !== false;
+    let mp = null;
+    if (showE) { mp = new V3(); (mito.anchor || mito.group).getWorldPosition(mp); }
+    live.energy.forEach((s, i) => {
+      s.visible = showE;
+      if (!showE) return;
+      const u = (elapsed * 0.45 + i / live.energy.length) % 1;
+      s.position.lerpVectors(mp, pathway.marker.position, u);
+      s.position.y += Math.sin(u * PI) * 1.4;
+      s.material.opacity = 0.9 * Math.sin(u * PI);
+    });
+    // 实时标注
+    const sc = pathway.marker.visible ? screenOf(pathway.marker.position) : screenOf(new V3(0, 6, 0));
+    if (sc) {
+      callout.style.transform = "translate(" + (sc.x + 18).toFixed(0) + "px," + (sc.y - 34).toFixed(0) + "px)";
+      callout.classList.add("on");
+    } else callout.classList.remove("on");
+    const es = showE ? screenOf(mp) : null;
+    if (es) {
+      energyTag.style.transform = "translate(" + (es.x + 12).toFixed(0) + "px," + (es.y - 26).toFixed(0) + "px)";
+      energyTag.classList.add("on");
+    } else energyTag.classList.remove("on");
+  };
+  /* ==== PLANT BOX + PATHWAY LIVE END ==== */
+  /* ==== STRUCTURE TUNING BEGIN ====
+     A 演示面板精简
+     B 植物细胞布局：按细胞器自身尺寸自动避让，保证全部在膜内
+     C 细胞壁 / 细胞膜 分层
+     D 线粒体、叶绿体：加大 + 高对比内部结构
+     E 全屏修复（含沉浸模式回退）
+     F 细胞器内部细节标注
+     ==== */
+  const IS_MOBILE_PAGE = !!document.querySelector("#fabWalk");
+  const TUNE = {
+    mitoScale: 1.3,     // 线粒体整体放大，便于看清嵴
+    chloroScale: 1.35,  // 叶绿体整体放大，便于看清基粒
+    nucR: 3.8,
+    vacCenter: [3.6, -0.4, -0.6],
+    vacHalf: [11.8, 9.0, 10.0],
+    wallScale: 1.052,
+    margin: 2.4
+  };
+  // 液泡：以半轴直接给出椭球
+  const VAC_R = 1.0;
+
+  /** 点相对细胞膜表面的归一化距离（1 = 在膜上） */
+  function normOf(p) {
+    const r = p.length();
+    if (r < 1e-6) return 0;
+    const d = p.clone().multiplyScalar(1 / r);
+    return r / boxMap(d.multiplyScalar(CELL_R), CELL_R).length();
+  }
+
+  /** 环状结构（内质网围绕细胞核）整体的避让：保证 中心 + 环半径 在膜内 */
+  function fitRing(dir, ringR, margin) {
+    const d = new V3(dir[0], dir[1], dir[2]).normalize();
+    const s = boxMap(d.clone().multiplyScalar(CELL_R), CELL_R).length();
+    const probes = [[ringR, 0, 0], [-ringR, 0, 0], [0, 0, ringR], [0, 0, -ringR], [0, -3.9, 0], [0, 1.7, 0]];
+    for (let f = 0.84; f >= 0.3; f -= 0.01) {
+      const C = d.clone().multiplyScalar(s * f);
+      let ok = true;
+      for (const q of probes) {
+        if (normOf(new V3(C.x + q[0], C.y + q[1], C.z + q[2])) > 1 - margin) { ok = false; break; }
+      }
+      if (ok) return C;
+    }
+    return d.multiplyScalar(s * 0.3);
+  }
+
+  /** 沿 dir 方向取一个点：保证该方向上「中心 + extent」留在膜内 margin 处 */
+  function fitOn(dir, extent, margin) {
+    const d = new V3(dir[0], dir[1], dir[2]).normalize();
+    const s = boxMap(d.clone().multiplyScalar(CELL_R), CELL_R).length(); // 该方向的膜面距离
+    const m = margin == null ? TUNE.margin : margin;
+    const f = clamp((s - (extent || 0) - m) / s, 0.3, 0.97);
+    return d.multiplyScalar(s * f);
+  }
+
+  /* ---------- A. 演示面板：手机端换短标签 + 收起按钮 ---------- */
+  if (IS_MOBILE_PAGE) {
+    const bars = document.querySelector("#pathBar .pw-bars");
+    if (bars) {
+      bars.innerHTML = ["核糖体/ER", "高尔基体", "囊泡", "细胞外"]
+        .map((n, i) => '<div class="pw-bar"><span>' + n + '</span><div class="pw-track"><i id="pwBar' + i + '"></i></div><em id="pwVal' + i + '">0%</em></div>')
+        .join("");
+    }
+  }
+  const pathBarEl = document.querySelector("#pathBar");
+  const collapseBtn = document.createElement("button");
+  collapseBtn.className = "pb-collapse";
+  collapseBtn.type = "button";
+  collapseBtn.textContent = "收起";
+  const pbHead = document.querySelector("#pathBar .pb-top");
+  if (pbHead) pbHead.appendChild(collapseBtn);
+  collapseBtn.addEventListener("click", () => {
+    const on = pathBarEl.classList.toggle("pw-compact");
+    collapseBtn.textContent = on ? "展开" : "收起";
+  });
+
+  /* ---------- B. 植物细胞布局 ---------- */
+  // 细胞核要连带内质网一起算尺寸：内质网以核为中心、半径约 8.75
+  const ER_EXTENT = 8.95;
+  const nucleusTarget = fitRing([-0.95, 0.24, 0.18], ER_EXTENT, 0.1);
+  NUCLEUS_PLANT.set(nucleusTarget.x, nucleusTarget.y, nucleusTarget.z);
+  const __tuneNucleus = buildNucleus;
+  buildNucleus = function (center, R) {
+    __tuneNucleus(center, state.mode === "plant" ? TUNE.nucR : R);
+  };
+  const __tuneGolgi = buildGolgi;
+  buildGolgi = function (plant) {
+    __tuneGolgi(plant);
+    if (plant && structures.has("golgi")) {
+      const g = structures.get("golgi").group;
+      const p = fitOn(
+        [nucleusTarget.x + 4.6, nucleusTarget.y - 5.4, nucleusTarget.z + 5.0],
+        5.4,
+        2.8
+      );
+      g.position.copy(p);
+    }
+  };
+
+  const ANIMAL_MITO = [
+    [[7.4, 7.2, 2.4], 1.0, [0.4, 0.7, 0.5]],
+    [[-8.2, 7.6, 4.4], 0.92, [-0.35, 0.2, -0.6]],
+    [[8.6, -6.3, -5.0], 0.98, [0.2, 1.1, 0.2]],
+    [[-7.8, -6.5, -7.0], 0.88, [-0.4, 0.8, 0.4]],
+    [[11.2, -1.5, 7.4], 0.78, [0.5, -0.2, 0.7]],
+    [[-1.4, -10.0, 5.0], 0.7, [-0.2, 0.4, 1.0]]
+  ];
+  const PLAN_MITO_DIR = [[0.95, 0.5, 0.15], [-0.9, 0.35, -0.2], [0.85, -0.55, 0.3], [-0.8, -0.6, -0.35], [0.6, 0.15, -0.85], [-0.35, -0.25, 0.92]];
+  const PLAN_CHLORO_DIR = [[0.9, 0.7, 0.1], [-0.5, 0.9, -0.5], [0.85, -0.75, 0.15], [-0.95, -0.4, -0.4], [0.1, -0.9, 0.6], [0.75, 0.35, 0.6]];
+
+  /* ---------- D. 线粒体 ----------
+     两套模型共用一组几何：
+       full —— 光滑胶囊（细胞里的样子，侧视看不出内部）
+       cut  —— 剖面（选中线粒体时切换，露出外膜 / 内膜 / 嵴 / 基质 / DNA / 核糖体） */
+  let mitoPrimary = null;
+  let MITO_GEO = null;
+  const MITO_A = 2.30, MITO_RO = 1.0, MITO_RI = 0.86;
+
+  function mitoGeometries() {
+    if (MITO_GEO) return MITO_GEO;
+    const A = MITO_A, RO = MITO_RO, RI = MITO_RI;
+    const taper = (x) => Math.sqrt(Math.max(0.001, 1 - Math.pow((x / A) * 0.965, 2)));
+    // 光滑外膜
+    const outer = ribbonGeometry((u, v) => {
+      const x = -A + u * 2 * A;
+      const th = v * TAU;
+      const r = RO * taper(x);
+      return new V3(x, Math.cos(th) * r, Math.sin(th) * r);
+    }, 96, 56);
+    // 光滑内膜（略小，留出膜间隙）
+    const inner = ribbonGeometry((u, v) => {
+      const x = -A + u * 2 * A;
+      const th = v * TAU;
+      const r = RI * taper(x) * 0.985;
+      return new V3(x, Math.cos(th) * r, Math.sin(th) * r);
+    }, 80, 48);
+    // 剖面外膜：只保留后半圈
+    const outerCut = ribbonGeometry((u, v) => {
+      const x = -A + u * 2 * A;
+      const th = PI + v * PI;
+      const r = RO * taper(x);
+      return new V3(x, Math.cos(th) * r, Math.sin(th) * r);
+    }, 96, 40);
+    // 剖面内膜：后半圈 + 轴向周期性向内折叠（嵴）
+    const nFold = 13, depth = 0.62;
+    const foldR = (x) => {
+      const k = ((x + A) / (2 * A)) * nFold;
+      const fr = k - Math.floor(k);
+      const bell = Math.pow(Math.sin(Math.PI * fr), 1.3);
+      return 1 - depth * bell;
+    };
+    const innerCut = ribbonGeometry((u, v) => {
+      const x = -A + u * 2 * A;
+      const th = PI + v * PI;
+      const r = RI * taper(x) * foldR(x);
+      return new V3(x, Math.cos(th) * r, Math.sin(th) * r);
+    }, 340, 64);
+    MITO_GEO = { outer, inner, outerCut, innerCut, taper, foldR };
+    return MITO_GEO;
+  }
+
+  function mitoMaterials() {
+    return {
+      outer: new THREE.MeshStandardMaterial({
+        color: 0xffa24a, roughness: 0.3, metalness: 0.1,
+        emissive: 0xff8a2e, emissiveIntensity: 0.5,
+        transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false
+      }),
+      inner: new THREE.MeshStandardMaterial({
+        color: 0xffdcae, roughness: 0.34, metalness: 0.05,
+        emissive: 0xffb571, emissiveIntensity: 0.4,
+        transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false
+      }),
+      cutOuter: new THREE.MeshStandardMaterial({
+        color: 0xff9a44, roughness: 0.32, metalness: 0.08,
+        emissive: 0xff8a2e, emissiveIntensity: 0.42,
+        side: THREE.DoubleSide
+      }),
+      cutInner: new THREE.MeshStandardMaterial({
+        color: 0xffe2bb, roughness: 0.36, metalness: 0.04,
+        emissive: 0xffc184, emissiveIntensity: 0.3,
+        side: THREE.DoubleSide
+      })
+    };
+  }
+
+  /* 双螺旋 DNA（两根相互缠绕的细管） */
+  function dnaStrand(cx, len, rad, turns) {
+    const g = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xfff3d6, roughness: 0.3, emissive: 0xffe0a0, emissiveIntensity: 0.7
+    });
+    for (let k = 0; k < 2; k++) {
+      const pts = [];
+      for (let i = 0; i <= 26; i++) {
+        const t = i / 26;
+        const a = t * TAU * turns + k * PI;
+        pts.push(new V3(cx + (t - 0.5) * len, Math.cos(a) * rad, Math.sin(a) * rad));
+      }
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, rad * 0.16, 5, false), mat);
+      tube.raycast = () => {};
+      g.add(tube);
+    }
+    return g;
+  }
+
+  function fillMatrix(group, ri, cut) {
+    // cut = true 时把所有内容压到剖切面内侧（z<=0），否则会悬在腔外
+    const zOf = (a, b) => (cut ? -rr(a, b) : rr(-b, b));
+    const pts = [];
+    for (let i = 0; i < 46; i++) {
+      pts.push(new V3(rr(-MITO_A * 0.8, MITO_A * 0.8), rr(-ri * 0.6, ri * 0.6), zOf(ri * 0.1, ri * 0.7)));
+    }
+    group.add(particleCloud(pts, 0xffe6c4, 0.055, 0.75));
+    const riboMat = new THREE.MeshStandardMaterial({ color: 0xfff3d6, roughness: 0.4, emissive: 0xc08a33, emissiveIntensity: 0.5 });
+    for (let i = 0; i < 7; i++) {
+      const r = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 8), riboMat);
+      r.position.set(rr(-1.5, 1.5), rr(-0.45, 0.45), zOf(0.12, ri * 0.5));
+      group.add(r);
+    }
+    const d1 = dnaStrand(0.35, 1.5, 0.18, 2.2);
+    d1.position.set(0, 0.05, cut ? -0.3 : 0.18);
+    d1.rotation.z = 0.2;
+    group.add(d1);
+    const d2 = dnaStrand(-0.95, 1.1, 0.15, 1.8);
+    d2.position.set(0, -0.05, cut ? -0.42 : -0.16);
+    d2.rotation.z = -0.25;
+    group.add(d2);
+  }
+
+  function makeMitoV2(pos, scale, rot) {
+    const G = mitoGeometries();
+    const M = mitoMaterials();
+    const g = new THREE.Group();
+    g.position.copy(pos);
+    g.rotation.set(rot[0], rot[1], rot[2]);
+    g.scale.setScalar(scale * TUNE.mitoScale);
+
+    // 1) 细胞里看到的：光滑胶囊
+    const full = new THREE.Group();
+    const o1 = new THREE.Mesh(G.outer, M.outer);
+    const i1 = new THREE.Mesh(G.inner, M.inner);
+    // 外膜保留 raycast，否则整颗线粒体点不中（会点到后面的细胞壁）
+    i1.raycast = () => {};
+    full.add(o1);
+    full.add(i1);
+    fillMatrix(full, MITO_RI, false);
+    g.add(full);
+
+    // 2) 选中后展示的：剖面
+    const cut = new THREE.Group();
+    const o2 = new THREE.Mesh(G.outerCut, M.cutOuter);
+    const i2 = new THREE.Mesh(G.innerCut, M.cutInner);
+    o2.raycast = () => {};
+    i2.raycast = () => {};
+    cut.add(o2);
+    cut.add(i2);
+    fillMatrix(cut, MITO_RI, true);
+    cut.visible = false;
+    g.add(cut);
+
+    g.userData.mitoFull = full;
+    g.userData.mitoCut = cut;
+    addGlow(g, 0xff7a22, 2.0, 0.07);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(0, 1.25, 0);
+    g.add(anchor);
+    return g;
+  }
+
+  buildMitochondria = function (plant) {
+    const list = [];
+    if (plant) {
+      PLAN_MITO_DIR.forEach((d, i) => {
+        const sc = 0.9 - (i % 3) * 0.03;
+        list.push([fitOn(d, 2.55 * sc * TUNE.mitoScale, 2.4), sc, [0.4 + i * 0.5, 0.7, 0.5 - i * 0.2]]);
+      });
+    } else {
+      ANIMAL_MITO.forEach((d) => list.push([new V3(d[0][0], d[0][1], d[0][2]), d[1], d[2]]));
+    }
+    mitoPrimary = null;
+    list.forEach((d, i) => {
+      const g = makeMitoV2(d[0], d[1], d[2]);
+      const rad = 2.6 * d[1] * TUNE.mitoScale;
+      if (!mitoPrimary) {
+        mitoPrimary = g;
+        addStructure("mitochondrion", g, rad, { labelOffset: new V3(0, rad * 0.85, 0) });
+      } else addTagged("mitochondrion", g);
+      const base = d[0].clone();
+      animated.push((dt, t) => {
+        g.position.y = base.y + Math.sin(t * 0.55 + i * 1.7) * 0.09;
+        g.position.x = base.x + Math.cos(t * 0.35 + i) * 0.04;
+      });
+    });
+    if (mitoPrimary) {
+      const e = structures.get("mitochondrion");
+      if (e) e.group = mitoPrimary;
+      detailed("mitochondrion", mitoPrimary);
+    }
+  };
+
+  /* ---- 选中线粒体 → 切换成剖面；取消选中 → 恢复光滑外形 ---- */
+  function setMitoCut(on) {
+    const g = mitoPrimary;
+    if (!g || !g.userData || !g.userData.mitoFull) return;
+    g.userData.mitoFull.visible = !on;
+    g.userData.mitoCut.visible = !!on;
+  }
+  const __mitoRender = renderPanel;
+  renderPanel = function (id) {
+    __mitoRender(id);
+    setMitoCut(id === "mitochondrion");
+  };
+  const __mitoClose = closePanel;
+  closePanel = function () {
+    setMitoCut(false);
+    __mitoClose();
+  };
+
+  /* ---------- D. 叶绿体：外膜 / 内膜 / 基粒 / 类囊体 / 基质 / 淀粉粒 ---------- */
+  let chloroPrimary = null;
+  function makeChloroV2(pos, scale, rot) {
+    const g = new THREE.Group();
+    g.position.copy(pos);
+    g.rotation.set(rot[0], rot[1], rot[2]);
+    g.scale.setScalar(scale * TUNE.chloroScale);
+    const outer = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 44, 30),
+      new THREE.MeshStandardMaterial({
+        color: 0x4ce36e, roughness: 0.3, metalness: 0.05,
+        emissive: 0x2fd457, emissiveIntensity: 0.4,
+        transparent: true, opacity: 0.30, side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    outer.scale.set(1.95, 0.76, 1.14);
+    g.add(outer);
+    const inner = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 40, 26),
+      new THREE.MeshStandardMaterial({
+        color: 0xd8ffe4, roughness: 0.26, metalness: 0.04,
+        emissive: 0x8bf7a8, emissiveIntensity: 0.55,
+        transparent: true, opacity: 0.42, side: THREE.DoubleSide, depthWrite: false
+      })
+    );
+    inner.scale.set(1.86, 0.67, 1.06);
+    inner.raycast = () => {};
+    g.add(inner);
+    /* 外膜的椭球：1.95 / 0.76 / 1.14。
+       基粒、类囊体、淀粉粒都必须落在这个椭球里，否则就从膜里穿出去。
+       用 ellipsoidFit() 把每个部件的位置按椭球收缩后再摆放。 */
+    const EA = 1.95, EB = 0.76, EC = 1.14;
+    const innerA = EA - 0.1, innerB = EB - 0.1, innerC = EC - 0.1;
+    // 给定方向上的椭球半径
+    const ellR = (dx, dy, dz) => {
+      const d = new V3(dx, dy, dz);
+      if (d.length() < 1e-6) return innerB;
+      d.normalize();
+      return 1 / Math.sqrt(
+        Math.pow(d.x / innerA, 2) + Math.pow(d.y / innerB, 2) + Math.pow(d.z / innerC, 2)
+      );
+    };
+    // 把点缩放到椭球内部的 fraction 处，并预留 r 的余量
+    const fitIn = (x, y, z, r) => {
+      const lim = ellR(x, y, z) - (r || 0);
+      const cur = Math.hypot(x / innerA, y / innerB, z / innerC) * Math.min(innerA, innerB, innerC);
+      const len = Math.hypot(x, y, z) || 1;
+      const k = Math.min(0.98, Math.max(0.05, lim / len));
+      return new V3(x * k, y * k, z * k);
+    };
+
+    // 基质
+    const sp = [];
+    for (let i = 0; i < 70; i++) {
+      const q = fitIn(rr(-1.6, 1.6), rr(-0.5, 0.5), rr(-0.9, 0.9), 0.04);
+      sp.push(q);
+    }
+    g.add(particleCloud(sp, 0xd2ffe0, 0.05, 0.6));
+    const thylakoidMat = new THREE.MeshStandardMaterial({
+      color: 0x8dffab, roughness: 0.26, metalness: 0.04,
+      emissive: 0x4fe87c, emissiveIntensity: 0.75, transparent: true, opacity: 0.96
+    });
+    // 基粒沿长轴分布，纵向与横向按椭球收窄，避免两头顶到膜
+    const granaRaw = [
+      [-1.22, 0.0, -0.3], [-0.7, 0.03, 0.34], [-0.12, -0.02, -0.26],
+      [0.48, 0.03, 0.32], [1.02, 0.0, -0.18], [1.34, 0.02, 0.36]
+    ];
+    const DISC_R = 0.26, STACK_H = 7 * 0.085;
+    const granaPos = granaRaw.map((q) => {
+      const p = fitIn(q[0], q[1], q[2], DISC_R + STACK_H * 0.5);
+      return [p.x, p.y, p.z];
+    });
+    granaPos.forEach((p) => {
+      const cnt = 7;
+      for (let i = 0; i < cnt; i++) {
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(DISC_R, DISC_R, 0.062, 20), thylakoidMat);
+        disc.position.set(p[0], p[1] + (i - (cnt - 1) / 2) * 0.085, p[2]);
+        disc.rotation.z = rr(-0.12, 0.12);
+        disc.rotation.x = rr(-0.08, 0.08);
+        disc.raycast = () => {};
+        g.add(disc);
+      }
+    });
+    // 基质类囊体：连接相邻基粒（中间点也按椭球收进来）
+    for (let i = 0; i < granaPos.length - 1; i++) {
+      const a = granaPos[i], b = granaPos[i + 1];
+      const mid = fitIn((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + 0.02, (a[2] + b[2]) / 2, 0.06);
+      const pts = [new V3(a[0], a[1], a[2]), mid, new V3(b[0], b[1], b[2])];
+      g.add(tubeFromPoints(pts, 0.032, 0x9dffb8, 0.9, 5));
+    }
+    const starch = new THREE.Mesh(
+      new THREE.SphereGeometry(0.17, 16, 12),
+      new THREE.MeshStandardMaterial({ color: 0xf4fff8, roughness: 0.4, emissive: 0x9fd8ad, emissiveIntensity: 0.35 })
+    );
+    const st = fitIn(0.42, 0.16, 0.5, 0.17);
+    starch.position.copy(st);
+    g.add(starch);
+    addGlow(g, 0x74ff8d, 2.0, 0.07);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(0, 0.92, 0);
+    g.add(anchor);
+    return g;
+  }
+  buildChloroplasts = function () {
+    chloroPrimary = null;
+    PLAN_CHLORO_DIR.forEach((d, i) => {
+      const sc = 1.05 - (i % 3) * 0.05;
+      const pos = fitOn(d, 2.45 * sc * TUNE.chloroScale, 2.4);
+      const g = makeChloroV2(pos, sc, [0.3, i * 1.1, 0.2]);
+      const rad = 1.95 * sc * TUNE.chloroScale;
+      if (!chloroPrimary) {
+        chloroPrimary = g;
+        addStructure("chloroplast", g, rad, { labelOffset: new V3(0, rad * 0.7, 0) });
+      } else addTagged("chloroplast", g);
+      const base = pos.clone();
+      animated.push((dt, t) => {
+        g.position.y = base.y + Math.sin(t * 0.48 + i * 1.9) * 0.12;
+      });
+    });
+    if (chloroPrimary) {
+      const e = structures.get("chloroplast");
+      if (e) e.group = chloroPrimary;
+      detailed("chloroplast", chloroPrimary);
+    }
+  };
+
+  /* ---------- B. 中央大液泡（半轴直接给定） ---------- */
+  buildVacuole = function () {
+    const g = new THREE.Group();
+    const center = new V3(TUNE.vacCenter[0], TUNE.vacCenter[1], TUNE.vacCenter[2]);
+    g.position.copy(center);
+    const H = TUNE.vacHalf;
+    // 用单位球按半轴缩放，壳层更薄更淡，避免从外面看不到细胞器
+    const shell = new THREE.Mesh(new THREE.SphereGeometry(VAC_R, 80, 54), makeShellMaterial("#0a3a56", "#7ceaff", 0.055, 1.4));
+    shell.scale.set(H[0], H[1], H[2]);
+    shell.renderOrder = 14;
+    g.add(shell);
+    const rim = new THREE.Mesh(
+      new THREE.SphereGeometry(VAC_R * 0.995, 48, 32),
+      new THREE.MeshBasicMaterial({ color: 0x5fe7ff, wireframe: true, transparent: true, opacity: 0.03, depthWrite: false })
+    );
+    rim.scale.copy(shell.scale);
+    rim.raycast = () => {};
+    g.add(rim);
+    // 细胞液
+    const pts = [];
+    for (let i = 0; i < 280; i++) pts.push(new V3(rr(-1, 1), rr(-1, 1), rr(-1, 1)));
+    const liquid = particleCloud(pts, 0x86eeff, 0.06, 0.3);
+    liquid.scale.set(H[0] * 0.92, H[1] * 0.92, H[2] * 0.92);
+    g.add(liquid);
+    const anchor = new THREE.Object3D();
+    anchor.position.set(0, H[1] * 0.95, 0);
+    g.add(anchor);
+    cellRoot.add(g);
+    tagObject(g, "vacuole");
+    structures.set("vacuole", {
+      id: "vacuole", def: DATA.vacuole, group: g, anchor: anchor,
+      radius: H[1], blocker: true, base: center.clone(), objectCount: 1
+    });
+    colliders.push({ pos: center.clone(), r: H[1] });
+    [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]].forEach((d) => {
+      colliders.push({
+        pos: new V3(center.x + d[0] * H[0] * 0.55, center.y, center.z + d[2] * H[2] * 0.55),
+        r: H[1] * 0.85
+      });
+    });
+    animated.push((dt, t) => {
+      g.rotation.y = Math.sin(t * 0.06) * 0.06;
+      liquid.rotation.y = t * 0.025;
+    });
+  };
+
+  /* ---------- C. 细胞壁 / 细胞膜 分层 ---------- */
+  const __tuneWall = buildWall;
+  buildWall = function () {
+    __tuneWall();
+    const e = structures.get("wall");
+    if (!e) return;
+    const g = e.group;
+    g.scale.setScalar(TUNE.wallScale);
+    e.radius *= TUNE.wallScale;
+    g.traverse((o) => {
+      if (!o.material) return;
+      if (o.material.uniforms && o.material.uniforms.uOpacity) o.material.uniforms.uOpacity.value = 0.09;
+      else if (o.material.isLineBasicMaterial) o.material.opacity = 0.36;
+      else if (o.material.transparent && o.material.opacity < 0.3) o.material.opacity = 0.44;
+    });
+  };
+
+  /* ---------- B. 散点类细胞器推到膜下细胞质带 ---------- */
+  function remapPoint(p, fMin, fMax) {
+    const r = p.length();
+    if (r < 0.001) return p;
+    const t = clamp(r / 16, 0, 1);
+    const d = new V3(p.x / r, p.y / r, p.z / r);
+    const s = boxMap(d.clone().multiplyScalar(CELL_R), CELL_R).length();
+    return d.multiplyScalar(s * (fMin + (fMax - fMin) * t));
+  }
+  /* 逐层处理：某个节点自身带位移就只移动它；顶点是绝对坐标就只改顶点，绝不重复 */
+  function remapNode(o, fMin, fMax) {
+    if (!o) return;
+    if (o.isSprite) return;
+    if (o.isInstancedMesh) {
+      const m4 = new THREE.Matrix4();
+      const pos = new V3(), q = new THREE.Quaternion(), sc = new V3();
+      for (let i = 0; i < o.count; i++) {
+        o.getMatrixAt(i, m4);
+        m4.decompose(pos, q, sc);
+        m4.compose(remapPoint(pos, fMin, fMax), q, sc);
+        o.setMatrixAt(i, m4);
+      }
+      o.instanceMatrix.needsUpdate = true;
+      return;
+    }
+    if (o.isPoints && o.geometry && o.geometry.attributes.position) {
+      const pa = o.geometry.attributes.position;
+      const a = new V3();
+      for (let i = 0; i < pa.count; i++) {
+        a.set(pa.getX(i), pa.getY(i), pa.getZ(i));
+        const w = remapPoint(a, fMin, fMax);
+        pa.setXYZ(i, w.x, w.y, w.z);
+      }
+      pa.needsUpdate = true;
+      o.geometry.computeBoundingSphere();
+      return;
+    }
+    const hasGeo = o.geometry && o.geometry.attributes && o.geometry.attributes.position;
+    if (hasGeo) {
+      if (o.position.length() < 1) {
+        // 顶点即绝对坐标（如细胞骨架的管道）
+        const pa = o.geometry.attributes.position;
+        const a = new V3();
+        for (let i = 0; i < pa.count; i++) {
+          a.set(pa.getX(i), pa.getY(i), pa.getZ(i));
+          const w = remapPoint(a, fMin, fMax);
+          pa.setXYZ(i, w.x, w.y, w.z);
+        }
+        pa.needsUpdate = true;
+        o.geometry.computeVertexNormals();
+        o.geometry.computeBoundingSphere();
+        return;
+      }
+      if (o.position.length() > 1) o.position.copy(remapPoint(o.position, fMin, fMax));
+      return;
+    }
+    if (o.position.length() > 1) {
+      o.position.copy(remapPoint(o.position, fMin, fMax));
+      return;
+    }
+    for (let i = 0; i < o.children.length; i++) remapNode(o.children[i], fMin, fMax);
+  }
+  function remapById(id, fMin, fMax) {
+    if (!cellRoot) return;
+    for (let i = 0; i < cellRoot.children.length; i++) {
+      const o = cellRoot.children[i];
+      if (o.userData && o.userData.infoId === id) remapNode(o, fMin, fMax);
+    }
+    // 直接挂在 cellRoot 上的散件（如核糖体 InstancedMesh）
+    cellRoot.traverse((o) => {
+      if (o === cellRoot || !o.userData || o.userData.infoId !== id) return;
+      if (o.parent === cellRoot && o.isInstancedMesh) remapNode(o, fMin, fMax);
+    });
+  }
+
+  /* ---------- F. 细胞器内部细节标注 ---------- */
+  const DETAILS = {
+    mitochondrion: [["外膜", [0, 1.02, 0]], ["内膜", [0.35, 0.8, 0]], ["嵴", [1.2, 0.18, 0.55]], ["基质", [-1.45, -0.1, 0.4]], ["环状 DNA", [0.35, 0.05, 0.3]], ["核糖体", [-0.6, 0.3, 0.3]]],
+    chloroplast: [["外膜", [0, 0.86, 0]], ["内膜", [0.3, 0.68, 0]], ["基粒", [-1.3, 0.32, 0]], ["类囊体", [0.55, 0.55, 0]], ["基质", [0.65, 0.18, 0.72]]]
+  };
+  const detailEls = {};
+  function ensureDetailEls(id) {
+    if (detailEls[id]) return detailEls[id];
+    const list = (DETAILS[id] || []).map((d) => {
+      const el = document.createElement("div");
+      el.className = "cell-detail";
+      el.textContent = d[0];
+      document.body.appendChild(el);
+      return el;
+    });
+    detailEls[id] = list;
+    return list;
+  }
+  function detailed(id, group) {
+    if (!group) return;
+    const list = ensureDetailEls(id);
+    const sets = DETAILS[id];
+    const v = new V3();
+    animated.push(() => {
+      const show = state.selected === id && !state.introOpen;
+      sets.forEach((d, i) => {
+        const el = list[i];
+        if (!show) {
+          el.classList.remove("on");
+          return;
+        }
+        v.set(d[1][0], d[1][1], d[1][2]);
+        group.localToWorld(v);
+        const sc = screenOf(v);
+        if (!sc || sc.x < 10 || sc.y < 10 || sc.x > window.innerWidth - 10 || sc.y > window.innerHeight - 10) {
+          el.classList.remove("on");
+          return;
+        }
+        el.style.transform = "translate(" + sc.x.toFixed(0) + "px," + sc.y.toFixed(0) + "px)";
+        el.classList.add("on");
+      });
+    });
+  }
+
+  /* ---------- E. 全屏修复 ---------- */
+  function p4Resize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  function immersiveFallback() {
+    const on = document.body.classList.toggle("immersive");
+    showToast(on ? "已进入沉浸模式（当前浏览器不支持全屏）" : "已退出沉浸模式");
+    setTimeout(p4Resize, 60);
+  }
+  function toggleFull() {
+    const d = document, el = d.documentElement;
+    const fsEl = d.fullscreenElement || d.webkitFullscreenElement || d.mozFullScreenElement || d.msFullscreenElement;
+    if (!fsEl) {
+      const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+      if (!req) {
+        immersiveFallback();
+        return;
+      }
+      try {
+        const r = req.call(el);
+        if (r && typeof r.then === "function") r.then(() => setTimeout(p4Resize, 120)).catch(() => immersiveFallback());
+        else setTimeout(p4Resize, 120);
+      } catch (e) {
+        immersiveFallback();
+      }
+    } else {
+      const exit = d.exitFullscreen || d.webkitExitFullscreen || d.mozCancelFullScreen || d.msExitFullscreen;
+      if (exit) {
+        try {
+          const r = exit.call(d);
+          if (r && typeof r.then === "function") r.then(() => setTimeout(p4Resize, 120)).catch(() => {});
+        } catch (e) {}
+      }
+      setTimeout(p4Resize, 200);
+    }
+  }
+  ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"].forEach((ev) =>
+    document.addEventListener(ev, () => setTimeout(p4Resize, 80))
+  );
+  const fullBtn = document.querySelector("#btnFull");
+  if (fullBtn) {
+    const fresh = fullBtn.cloneNode(true);
+    fullBtn.parentNode && fullBtn.parentNode.replaceChild(fresh, fullBtn);
+    fresh.addEventListener("click", toggleFull);
+  }
+
+  /* ---------- 重建场景时重新套用植物布局 ---------- */
+  const __tuneRebuild = rebuildScene;
+  rebuildScene = function () {
+    __tuneRebuild();
+    if (state.mode === "plant") {
+      remapById("peroxisome", 0.78, 0.87);
+      remapById("vesicle", 0.76, 0.89);
+      remapById("cytoskeleton", 0.74, 0.9);
+      remapById("ribosome", 0.76, 0.9);
+      const e = structures.get("ribosome");
+      if (e) e.base = e.group.position.clone();
+    }
+  };
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== STRUCTURE TUNING END ==== */
+  /* ==== WALK ZOOM BEGIN ====
+     漫游模式下的缩放：滚轮 / 双指 / +/- 键改变视角大小（FOV），
+     原来漫游只能平移不能放大，靠近也看不清细胞器。 */
+  const WALK_FOV = { min: 14, max: 62, def: 52 };
+  function setWalkFov(v) {
+    const f = clamp(v, WALK_FOV.min, WALK_FOV.max);
+    camera.fov = f;
+    camera.updateProjectionMatrix();
+  }
+  function resetWalkFov() {
+    camera.fov = WALK_FOV.def;
+    camera.updateProjectionMatrix();
+  }
+  const __wzEnter = enterWalk;
+  enterWalk = function () {
+    resetWalkFov();
+    __wzEnter();
+  };
+  const __wzExit = exitWalk;
+  exitWalk = function () {
+    resetWalkFov();
+    __wzExit();
+  };
+  canvas.addEventListener(
+    "wheel",
+    (e) => {
+      if (state.view !== "walk") return;
+      e.preventDefault();
+      e.stopPropagation();
+      setWalkFov(camera.fov * Math.exp(e.deltaY * 0.0012));
+    },
+    { passive: false, capture: true }
+  );
+  const wzPts = new Map();
+  let wzPinch = 0;
+  canvas.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (state.view !== "walk") return;
+      wzPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (wzPts.size === 2) {
+        const a = Array.from(wzPts.values());
+        wzPinch = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      }
+    },
+    true
+  );
+  canvas.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!wzPts.has(e.pointerId)) return;
+      wzPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (state.view !== "walk" || wzPts.size < 2) return;
+      const a = Array.from(wzPts.values());
+      const d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      if (wzPinch > 1 && d > 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        setWalkFov(camera.fov * (wzPinch / d));
+      }
+      wzPinch = d;
+    },
+    true
+  );
+  ["pointerup", "pointercancel"].forEach((t) =>
+    canvas.addEventListener(
+      t,
+      (e) => {
+        wzPts.delete(e.pointerId);
+        if (wzPts.size < 2) wzPinch = 0;
+      },
+      true
+    )
+  );
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (state.view !== "walk") return;
+      if (e.key === "+" || e.key === "=") setWalkFov(camera.fov - 4);
+      else if (e.key === "-" || e.key === "_") setWalkFov(camera.fov + 4);
+    },
+    true
+  );
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+  /* ==== WALK ZOOM END ==== */
+
+  /* ==== INSPECT MODE BEGIN ====
+     交互分三段，避免一戳就弹出大面板挡住模型：
+       1) 点场景里的结构  → 进入「细看」：切剖面（如线粒体）、镜头贴近、显示部件标注
+       2) 滚轮 / 双指      → 在剖面上继续放大，看嵴、基粒等细节
+       3) 点部件标注或名称 → 才展开右侧详细说明
+     ===== */
+  const inspect = { id: null, bar: null, nameEl: null, hintEl: null, openingPanel: false };
+
+  function buildInspectBar() {
+    if (inspect.bar) return;
+    const bar = document.createElement("div");
+    bar.id = "inspectBar";
+    bar.innerHTML =
+      '<button class="ib-name" id="ibName" type="button"></button>' +
+      '<span class="ib-hint" id="ibHint"></span>' +
+      '<button class="ib-close" id="ibClose" type="button" aria-label="退出细看">×</button>';
+    document.body.appendChild(bar);
+    inspect.bar = bar;
+    inspect.nameEl = bar.querySelector("#ibName");
+    inspect.hintEl = bar.querySelector("#ibHint");
+    const closeBtn = bar.querySelector("#ibClose");
+    if (closeBtn) closeBtn.addEventListener("click", () => exitInspect());
+    if (inspect.nameEl) inspect.nameEl.addEventListener("click", () => openDetail());
+  }
+
+  function showInspectBar(id) {
+    buildInspectBar();
+    inspect.bar.classList.add("on");
+    inspect.nameEl.textContent = (DATA[id] && DATA[id].name) || id;
+    inspect.hintEl.textContent = DETAILS[id]
+      ? "滚轮 / 双指放大 · 点部件名称看说明"
+      : "滚轮 / 双指放大 · 点名称看说明";
+  }
+
+  function hideInspectBar() {
+    if (inspect.bar) inspect.bar.classList.remove("on");
+  }
+
+  /* 进入「细看」：只切剖面 + 贴近 + 高亮，不打开右侧面板 */
+  function nearestMitoRoot() {
+    let best = null, bd = 1e9;
+    if (!cellRoot) return null;
+    cellRoot.traverse((o) => {
+      if (!o.userData || !o.userData.mitoFull || !o.userData.mitoCut) return;
+      const p = new V3();
+      o.getWorldPosition(p);
+      const d = p.distanceTo(camera.position);
+      if (d < bd) { bd = d; best = o; }
+    });
+    return best;
+  }
+
+  function enterInspect(id) {
+    if (!id || !DATA[id]) return;
+    if (!available(id)) {
+      showToast("当前细胞类型中没有" + DATA[id].name + "，试试切换细胞类型");
+      return;
+    }
+    // 细看优先：先收起右侧说明面板，别挡着模型
+    if (panel.classList.contains("open")) __inspectClose();
+    inspect.id = id;
+    state.selected = id;
+    if (selectedRing) {
+      paintRing(selectedRing, DATA[id].color);
+      selectedRing.visible = true;
+    }
+    const e = structures.get(id);
+    const focusRoot = id === "mitochondrion" ? nearestMitoRoot() : null;
+    if (focusRoot && state.view === "orbit") {
+      const p = new V3();
+      focusRoot.getWorldPosition(p);
+      orbit.targetGoal.copy(p);
+      orbit.radiusGoal = 4.2;
+      orbit.auto = false;
+      orbit.idle = 0;
+    } else if (e && state.view === "orbit") {
+      const p = new V3();
+      e.group.getWorldPosition(p);
+      orbit.targetGoal.copy(p);
+      orbit.radiusGoal = clamp(e.radius * 2.4 + 1.0, 2.6, 44);
+      orbit.auto = false;
+      orbit.idle = 0;
+    }
+    // 线粒体：把用户点的那个切到剖面（离镜头最近的一个）
+    if (id === "mitochondrion") {
+      setMitoCutFor(nearestMitoRoot(), true);
+    } else {
+      setMitoCutFor(inspect.mitoRoot, false);
+      inspect.mitoRoot = null;
+    }
+    labels.forEach((l) => l.el.classList.toggle("selected", l.id === id));
+    $$(".chip").forEach((c) => c.classList.toggle("active", c.dataset.id === id));
+    showInspectBar(id);
+  }
+
+  function setMitoCutFor(root, on) {
+    if (!root || !root.userData || !root.userData.mitoFull) return;
+    root.userData.mitoFull.visible = !on;
+    root.userData.mitoCut.visible = !!on;
+    if (on) inspect.mitoRoot = root;
+  }
+
+  function exitInspect() {
+    inspect.id = null;
+    state.selected = null;
+    if (selectedRing) selectedRing.visible = false;
+    if (hoverRing) hoverRing.visible = false;
+    setMitoCutFor(inspect.mitoRoot, false);
+    inspect.mitoRoot = null;
+    labels.forEach((l) => l.el.classList.remove("selected"));
+    $$(".chip").forEach((c) => c.classList.remove("active"));
+    hideInspectBar();
+    orbit.auto = true;
+  }
+
+  /* 从「细看」进入「读说明」：正常打开右侧知识卡 */
+  function openDetail() {
+    const id = inspect.id || state.selected;
+    if (!id) return;
+    hideInspectBar();
+    inspect.openingPanel = true;
+    __inspectSelect(id, {});
+    inspect.openingPanel = false;
+  }
+
+  // 1) 场景点选（不带 focus）先进入细看；挂件 / 标签 / 相关结构照常开面板
+  const __inspectSelect = select;
+  select = function (id, opts) {
+    opts = opts || {};
+    const fromScene = !opts.focus && !opts.fromLabel;
+    if (fromScene && !pathway.active && !inspect.openingPanel) {
+      enterInspect(id);
+      return;
+    }
+    return __inspectSelect(id, opts);
+  };
+
+  // 2) 部件标注可点：创建时直接绑事件，点任一部件都展开说明
+  const __inspectDetailEls = ensureDetailEls;
+  ensureDetailEls = function (id) {
+    const list = __inspectDetailEls(id);
+    list.forEach((el) => {
+      if (el.__inspectWired) return;
+      el.__inspectWired = true;
+      el.addEventListener("click", (e) => {
+        if (e && e.stopPropagation) e.stopPropagation();
+        openDetail();
+      });
+    });
+    return list;
+  };
+
+  // 3) Esc 退出细看
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key !== "Escape" || !inspect.id) return;
+      if (panel.classList.contains("open")) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      exitInspect();
+    },
+    true
+  );
+
+  // 4) 关闭右侧面板后连带退出细看
+  const __inspectClose = closePanel;
+  closePanel = function () {
+    const was = inspect.id;
+    __inspectClose();
+    if (was) exitInspect();
+  };
+
+  // 5) 切换细胞类型 / 重建场景时清掉细看状态
+  const __inspectRebuild = rebuildScene;
+  rebuildScene = function () {
+    __inspectRebuild();
+    if (inspect.id) {
+      inspect.id = null;
+      hideInspectBar();
+    }
+  };
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+  /* ==== INSPECT MODE END ==== */
+
+  /* ==== CHLOROPLAST FLOW BEGIN ====
+     叶绿体随细胞质流动（黑藻实验的经典现象）。
+     路径构造：以液泡中心为原点取方向 d，
+       内边界 = 液泡表面沿 d 的距离 rv
+       外边界 = 细胞膜沿 d 的距离 rm
+       半径取 rv + (rm - rv) * f（f<1），所以任意时刻都在细胞质带内，
+       既不穿液泡、也不穿细胞膜。
+     6 个叶绿体各有不同的倾角 / 高度带来 / 速度；
+     相互靠近时自动错开相位；进入「细看」时暂停。
+     ===== */
+  const FLOW_N = 72; // 每条路径预采样的点数
+  const VAC_C = new V3(TUNE.vacCenter[0], TUNE.vacCenter[1], TUNE.vacCenter[2]);
+  const VAC_H = TUNE.vacHalf;
+  const flow = { items: [], timer: 0, minDist: 4.2 };
+
+  // 从液泡中心沿单位方向到液泡表面的距离
+  function vacRadAlong(d) {
+    return 1 / Math.sqrt(
+      Math.pow(d.x / VAC_H[0], 2) + Math.pow(d.y / VAC_H[1], 2) + Math.pow(d.z / VAC_H[2], 2)
+    );
+  }
+  // 从液泡中心沿单位方向到细胞膜的距离（二分法，预采样时算一次）
+  function memRadAlong(d) {
+    let lo = 0.5, hi = 70;
+    for (let i = 0; i < 30; i++) {
+      const mid = (lo + hi) / 2;
+      const p = VAC_C.clone().addScaledVector(d, mid);
+      if (normOf(p) > 1) hi = mid;
+      else lo = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  function buildFlowItem(dir, i) {
+    const u = new V3(dir[0], dir[1], dir[2]).normalize();
+    const helper = Math.abs(u.y) < 0.9 ? new V3(0, 1, 0) : new V3(1, 0, 0);
+    const v = new V3().crossVectors(u, helper).normalize();
+    const w = new V3().crossVectors(u, v).normalize();
+    const tilt = 0.45 + (i % 3) * 0.14;   // 小圆的开口
+    const frac = 0.34 + (i % 3) * 0.12;   // 落在细胞质带里的相对位置
+    const samples = [];
+    for (let k = 0; k < FLOW_N; k++) {
+      const th = (k / FLOW_N) * TAU;
+      const d = u
+        .clone()
+        .multiplyScalar(Math.cos(tilt))
+        .addScaledVector(v, Math.sin(tilt) * Math.cos(th))
+        .addScaledVector(w, Math.sin(tilt) * Math.sin(th))
+        .normalize();
+      const rv = vacRadAlong(d);
+      const rm = memRadAlong(d);
+      const r = rv + (rm - rv) * frac;
+      samples.push(VAC_C.clone().addScaledVector(d, r));
+    }
+    return {
+      samples: samples,
+      t: (i / 6) * 1 + 0.05,
+      speed: 0.028 + (i % 3) * 0.005,
+      group: null
+    };
+  }
+
+  function flowSample(item, t) {
+    const n = FLOW_N;
+    const x = (((t % 1) + 1) % 1) * n;
+    const k = Math.floor(x);
+    const f = x - k;
+    const a = item.samples[k % n];
+    const b = item.samples[(k + 1) % n];
+    return new V3().lerpVectors(a, b, f);
+  }
+
+  /* 覆盖叶绿体的构建：位置改由流动路径驱动 */
+  buildChloroplasts = function () {
+    chloroPrimary = null;
+    flow.items = [];
+    flow.timer = 0;
+    const dirs = PLAN_CHLORO_DIR;
+    dirs.forEach((d, i) => {
+      const sc = 1.05 - (i % 3) * 0.05;
+      const item = buildFlowItem(d, i);
+      flow.items.push(item);
+      const start = flowSample(item, item.t);
+      const g = makeChloroV2(start, sc, [0.3, i * 1.1, 0.2]);
+      const rad = 1.95 * sc * TUNE.chloroScale;
+      if (!chloroPrimary) {
+        chloroPrimary = g;
+        addStructure("chloroplast", g, rad, { labelOffset: new V3(0, rad * 0.7, 0) });
+      } else addTagged("chloroplast", g);
+      item.group = g;
+    });
+    if (chloroPrimary) {
+      const e = structures.get("chloroplast");
+      if (e) e.group = chloroPrimary;
+      detailed("chloroplast", chloroPrimary);
+    }
+    // 逐帧推进；细看时暂停，便于观察结构
+    animated.push((dt) => {
+      if (inspect && inspect.id) return;
+      flow.timer += dt;
+      const n = flow.items.length;
+      // 先按各自速度推进相位
+      flow.items.forEach((it) => {
+        it.t += it.speed * dt;
+      });
+      // 互不碰撞：靠近时把相位往两边推开
+      for (let pass = 0; pass < 3; pass++) {
+        for (let a = 0; a < n; a++) {
+          for (let b = a + 1; b < n; b++) {
+            const pa = flowSample(flow.items[a], flow.items[a].t);
+            const pb = flowSample(flow.items[b], flow.items[b].t);
+            const d = pa.distanceTo(pb);
+            if (d < flow.minDist) {
+              const push = (flow.minDist - d) * 0.004;
+              flow.items[a].t -= push;
+              flow.items[b].t += push;
+            }
+          }
+        }
+      }
+      // 应用到场景
+      flow.items.forEach((it) => {
+        if (!it.group) return;
+        it.group.position.copy(flowSample(it, it.t));
+      });
+    });
+  };
+  /* ==== CHLOROPLAST FLOW END ==== */
+  /* ==== CHLOROPLAST FLOW END ==== */
+
   /* ================= LIGHT / SCENE INIT ================= */
   buildBackdrop();
   buildLights();
@@ -4445,6 +6875,7 @@ window.CELL_DATA = {
       ringTarget(state.hovered, hoverRing, 1.16);
     }
 
+    if (pathway.active) updatePathway(dt);
     updateLabels();
     renderer.render(scene, camera);
 
